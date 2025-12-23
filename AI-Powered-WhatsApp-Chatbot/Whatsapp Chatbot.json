@@ -1,0 +1,379 @@
+{
+  "name": "Whatsapp Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// ENHANCED WHATSAPP CAR BROCHURE MATCHING SYSTEM\n// ============================================\n\nconsole.log(\"🚀 Starting Enhanced WhatsApp Car Brochure Matching System...\");\n\n// ============================================\n// STEP 1: GET CAR NAME FROM WHATSAPP MESSAGE\n// ============================================\n\nlet inputCarName = null;\nlet whatsappMessage = null;\n\nconsole.log(\"=== STEP 1: Processing WhatsApp Message ===\");\n\ntry {\n  // Try multiple ways to get the WhatsApp message\n  const switchOutput = $('Switch').first();\n  const whatsappTrigger = $('WhatsApp Trigger1').first();\n  \n  if (switchOutput && switchOutput.json && switchOutput.json.message) {\n    whatsappMessage = switchOutput.json.message;\n  } else if (whatsappTrigger && whatsappTrigger.json && whatsappTrigger.json.messages) {\n    whatsappMessage = whatsappTrigger.json.messages[0].text.body;\n  } else {\n    // Fallback: check input data\n    const inputData = $input.first();\n    if (inputData && inputData.json && inputData.json.message) {\n      whatsappMessage = inputData.json.message;\n    }\n  }\n  \n  console.log(`📱 WhatsApp message: \"${whatsappMessage}\"`);\n  \n  if (whatsappMessage) {\n    inputCarName = extractCarNameFromMessage(whatsappMessage);\n  }\n} catch (error) {\n  console.log(\"❌ Error getting WhatsApp message:\", error.message);\n}\n\n// Enhanced function to extract car name from WhatsApp message\nfunction extractCarNameFromMessage(message) {\n  if (!message || typeof message !== 'string') return null;\n  \n  console.log(`🔍 Processing message: \"${message}\"`);\n  \n  // Known car model variations and common misspellings\n  const carModelMappings = {\n    'wagon r': ['waganor', 'wagonr', 'wagon-r', 'vagon r', 'vagn r'],\n    'swift': ['swfit', 'swft', 'siwft'],\n    'dzire': ['desire', 'dezire', 'dsire'],\n    'baleno': ['baleno', 'beleno', 'balino'],\n    'alto': ['alto', 'altu'],\n    'vitara': ['vitara', 'vitaara'],\n    'brezza': ['breza', 'brizza', 'breza'],\n    'ertiga': ['ertiga', 'artiga'],\n    'xl6': ['xl6', 'xl 6', 'xl-6'],\n    'ciaz': ['ciaz', 'ciaaz'],\n    's-cross': ['scross', 's cross', 'cross'],\n    'celerio': ['celerio', 'celario'],\n    'ignis': ['ignis', 'igniss'],\n    'jimny': ['jimny', 'jimmy', 'jmny']\n  };\n  \n  // Normalize message for better matching\n  const normalizedMessage = message.toLowerCase().trim();\n  \n  // Check for direct car model matches (including variations)\n  for (const [correctName, variations] of Object.entries(carModelMappings)) {\n    for (const variation of variations) {\n      if (normalizedMessage.includes(variation)) {\n        console.log(`✅ Found car model \"${correctName}\" from variation \"${variation}\"`);\n        return correctName;\n      }\n    }\n    // Also check the correct name itself\n    if (normalizedMessage.includes(correctName)) {\n      console.log(`✅ Found car model \"${correctName}\" directly`);\n      return correctName;\n    }\n  }\n  \n  // Enhanced patterns for brochure requests\n  const patterns = [\n    /(?:brochure|catalog|info|details|information).*?(?:for|of|about)\\s+(.+?)(?:\\s+please|\\s+pls|$)/i,\n    /(?:send|share|give|show|get).*?(?:brochure|catalog|info|details).*?(?:for|of|about)\\s+(.+?)(?:\\s+please|\\s+pls|$)/i,\n    /(?:want|need|looking for).*?(?:brochure|catalog|info|details).*?(?:for|of|about)\\s+(.+?)(?:\\s+please|\\s+pls|$)/i,\n    /(.+?)(?:\\s+brochure|\\s+catalog|\\s+info|\\s+details|\\s+pdf)/i,\n    /(?:^|\\s)([a-zA-Z][a-zA-Z0-9\\s-]{2,20})(?:\\s+brochure|\\s+catalog|\\s+info|\\s+details|$)/i\n  ];\n  \n  for (let pattern of patterns) {\n    const match = normalizedMessage.match(pattern);\n    if (match && match[1]) {\n      let carName = match[1].trim();\n      // Clean up the extracted name\n      carName = carName.replace(/[^\\w\\s-]/g, '').trim();\n      if (carName.length > 1 && carName.length < 50) {\n        console.log(`✅ Extracted car name: \"${carName}\" using pattern`);\n        return carName;\n      }\n    }\n  }\n  \n  // Last resort: use the entire message if it's short\n  const cleanMessage = normalizedMessage.replace(/[^\\w\\s-]/g, '').trim();\n  if (cleanMessage.length > 1 && cleanMessage.length < 30) {\n    console.log(`✅ Using entire message as car name: \"${cleanMessage}\"`);\n    return cleanMessage;\n  }\n  \n  return null;\n}\n\n// Validate car name\nif (!inputCarName) {\n  console.log(\"❌ No car name found in WhatsApp message\");\n  console.log(\"WhatsApp message:\", whatsappMessage);\n  \n  // FIXED: Return single object instead of array\n  return {\n    brochure_url: null,\n    message: \"I couldn't understand which car you're looking for. Could you please specify the car model? For example: 'Swift brochure' or 'Wagon R catalog'\",\n    error: \"CAR_NAME_NOT_FOUND\",\n    original_message: whatsappMessage,\n    success: false\n  };\n}\n\nconsole.log(`✅ Successfully extracted car name: \"${inputCarName}\"`);\n\n// ============================================\n// STEP 2: GET BROCHURE DATA FROM SUPABASE\n// ============================================\n\nconsole.log(\"\\n=== STEP 2: Getting brochure data from Supabase ===\");\n\nlet brochures = [];\n\ntry {\n  // Get all input items (should be from Supabase)\n  const inputItems = $input.all();\n  console.log(`📊 Found ${inputItems.length} input items`);\n  \n  if (inputItems.length === 0) {\n    console.log(\"❌ No input items found\");\n    // FIXED: Return single object instead of array\n    return {\n      brochure_url: null,\n      message: \"Sorry, I'm having trouble accessing our brochure database right now. Please try again later.\",\n      error: \"NO_INPUT_DATA\",\n      success: false\n    };\n  }\n  \n  // Extract JSON data from input items\n  brochures = inputItems.map(item => {\n    if (item.json) {\n      return item.json;\n    } else if (item.data) {\n      return item.data;\n    } else {\n      return item;\n    }\n  });\n  \n  console.log(`📊 Processed ${brochures.length} brochures from input`);\n  \n  // Log sample data for debugging\n  if (brochures.length > 0) {\n    console.log(\"Sample brochure data:\", JSON.stringify(brochures[0], null, 2));\n  }\n} catch (error) {\n  console.log(\"❌ Error processing input data:\", error.message);\n  // FIXED: Return single object instead of array\n  return {\n    brochure_url: null,\n    message: \"Sorry, there was an error processing our brochure database. Please try again later.\",\n    error: \"DATA_PROCESSING_ERROR\",\n    success: false\n  };\n}\n\n// Filter valid brochures with more flexible validation\nconst validBrochures = brochures.filter(b => {\n  const hasCarName = b.car_name && typeof b.car_name === 'string' && b.car_name.trim();\n  const hasUrl = b.brochure_url && typeof b.brochure_url === 'string' && b.brochure_url.trim();\n  const isValid = hasCarName && hasUrl;\n  \n  if (!isValid) {\n    console.log(`⚠️ Invalid brochure:`, {\n      car_name: b.car_name,\n      brochure_url: b.brochure_url,\n      hasCarName,\n      hasUrl\n    });\n  }\n  \n  return isValid;\n});\n\nconsole.log(`✅ ${validBrochures.length} valid brochures found out of ${brochures.length} total`);\n\nif (validBrochures.length === 0) {\n  // FIXED: Return single object instead of array\n  return {\n    brochure_url: null,\n    message: \"Sorry, our brochure database seems to be empty or incomplete right now. Please try again later.\",\n    error: \"NO_VALID_BROCHURES\",\n    success: false\n  };\n}\n\n// ============================================\n// STEP 3: ENHANCED FUZZY MATCHING ALGORITHM\n// ============================================\n\nconsole.log(`\\n=== STEP 3: Matching \"${inputCarName}\" with available brochures ===`);\n\n// Advanced text normalization with better cleaning\nfunction normalize(text) {\n  if (!text || typeof text !== 'string') return \"\";\n  return text.toLowerCase()\n             .replace(/[^\\w\\s]/g, ' ')  // Replace punctuation with spaces\n             .replace(/\\s+/g, ' ')      // Replace multiple spaces with single space\n             .trim();\n}\n\n// Enhanced similarity calculation with better fuzzy matching\nfunction calculateSimilarity(input, target) {\n  const normInput = normalize(input);\n  const normTarget = normalize(target);\n  \n  console.log(`  🔍 Comparing: \"${normInput}\" vs \"${normTarget}\"`);\n  \n  // 1. Exact match (perfect score)\n  if (normInput === normTarget) {\n    return { score: 1.0, type: \"Perfect Match\", details: \"Exact match after normalization\" };\n  }\n  \n  // 2. Handle special case for \"wagon r\" vs \"waganor\" type mismatches\n  const specialMappings = {\n    'waganor': 'wagon r',\n    'wagonr': 'wagon r',\n    'wagon-r': 'wagon r',\n    'vagon r': 'wagon r'\n  };\n  \n  const mappedInput = specialMappings[normInput] || normInput;\n  const mappedTarget = specialMappings[normTarget] || normTarget;\n  \n  if (mappedInput === mappedTarget) {\n    return { score: 0.95, type: \"Special Mapping Match\", details: `Mapped \"${normInput}\" to \"${mappedInput}\"` };\n  }\n  \n  // 3. Case-insensitive match without spaces\n  const cleanInput = normInput.replace(/\\s/g, '');\n  const cleanTarget = normTarget.replace(/\\s/g, '');\n  if (cleanInput === cleanTarget) {\n    return { score: 0.92, type: \"Exact Match (No Spaces)\", details: \"Same after removing spaces\" };\n  }\n  \n  // 4. Substring matching (one contains the other)\n  if (normTarget.includes(normInput)) {\n    const coverage = normInput.length / normTarget.length;\n    return { \n      score: 0.85 + (coverage * 0.1), \n      type: \"Input Contained\", \n      details: `\"${normInput}\" found in \"${normTarget}\" (${(coverage * 100).toFixed(1)}% coverage)` \n    };\n  }\n  if (normInput.includes(normTarget)) {\n    const coverage = normTarget.length / normInput.length;\n    return { \n      score: 0.80 + (coverage * 0.1), \n      type: \"Target Contained\", \n      details: `\"${normTarget}\" found in \"${normInput}\" (${(coverage * 100).toFixed(1)}% coverage)` \n    };\n  }\n  \n  // 5. Enhanced word-based matching\n  const inputWords = normInput.split(' ').filter(w => w.length > 0);\n  const targetWords = normTarget.split(' ').filter(w => w.length > 0);\n  \n  if (inputWords.length === 0 || targetWords.length === 0) {\n    return { score: 0, type: \"No Valid Words\", details: \"No meaningful words found\" };\n  }\n  \n  let exactWordMatches = 0;\n  let partialWordMatches = 0;\n  let matchedWords = [];\n  \n  // Check for exact and partial word matches\n  for (let inputWord of inputWords) {\n    let bestPartialScore = 0;\n    let bestPartialMatch = null;\n    \n    for (let targetWord of targetWords) {\n      if (inputWord === targetWord) {\n        exactWordMatches++;\n        matchedWords.push(inputWord);\n        break;\n      } else if (inputWord.length > 1 && targetWord.length > 1) {\n        // Check for partial matches\n        let partialScore = 0;\n        \n        if (inputWord.includes(targetWord) || targetWord.includes(inputWord)) {\n          partialScore = 0.8;\n        } else {\n          // Use Levenshtein distance for fuzzy matching\n          const maxLen = Math.max(inputWord.length, targetWord.length);\n          const distance = levenshteinDistance(inputWord, targetWord);\n          partialScore = 1 - (distance / maxLen);\n        }\n        \n        if (partialScore > bestPartialScore && partialScore > 0.6) {\n          bestPartialScore = partialScore;\n          bestPartialMatch = targetWord;\n        }\n      }\n    }\n    \n    if (bestPartialMatch && bestPartialScore > 0.6) {\n      partialWordMatches += bestPartialScore;\n      matchedWords.push(`${inputWord}≈${bestPartialMatch}`);\n    }\n  }\n  \n  // Calculate word-based score\n  const totalMatches = exactWordMatches + partialWordMatches;\n  const wordScore = totalMatches / Math.max(inputWords.length, targetWords.length);\n  \n  // 6. Character-level similarity (Levenshtein) with better weighting\n  const maxLen = Math.max(normInput.length, normTarget.length);\n  const distance = levenshteinDistance(normInput, normTarget);\n  const charScore = maxLen > 0 ? 1 - (distance / maxLen) : 0;\n  \n  // 7. Soundex matching for phonetic similarity\n  const soundexScore = soundex(normInput) === soundex(normTarget) ? 0.3 : 0;\n  \n  // Weighted final score with better balance\n  let finalScore = (wordScore * 0.5) + (charScore * 0.4) + (soundexScore * 0.1);\n  \n  // Boost score for very short inputs that match well\n  if (normInput.length <= 6 && charScore > 0.7) {\n    finalScore = Math.min(1.0, finalScore * 1.2);\n  }\n  \n  // Determine match type\n  let matchType;\n  if (finalScore >= 0.9) matchType = \"Excellent Match\";\n  else if (finalScore >= 0.7) matchType = \"Very Good Match\";\n  else if (finalScore >= 0.5) matchType = \"Good Match\";\n  else if (finalScore >= 0.3) matchType = \"Fair Match\";\n  else matchType = \"Poor Match\";\n  \n  return {\n    score: finalScore,\n    type: matchType,\n    details: `Words: ${wordScore.toFixed(2)}, Chars: ${charScore.toFixed(2)}, Soundex: ${soundexScore.toFixed(2)} | Matched: [${matchedWords.join(', ')}]`\n  };\n}\n\n// Optimized Levenshtein distance calculation\nfunction levenshteinDistance(str1, str2) {\n  if (str1.length === 0) return str2.length;\n  if (str2.length === 0) return str1.length;\n  \n  const matrix = [];\n  \n  // Initialize first row and column\n  for (let i = 0; i <= str2.length; i++) {\n    matrix[i] = [i];\n  }\n  for (let j = 0; j <= str1.length; j++) {\n    matrix[0][j] = j;\n  }\n  \n  // Fill the matrix\n  for (let i = 1; i <= str2.length; i++) {\n    for (let j = 1; j <= str1.length; j++) {\n      const cost = str1[j - 1] === str2[i - 1] ? 0 : 1;\n      matrix[i][j] = Math.min(\n        matrix[i - 1][j] + 1,     // deletion\n        matrix[i][j - 1] + 1,     // insertion\n        matrix[i - 1][j - 1] + cost // substitution\n      );\n    }\n  }\n  \n  return matrix[str2.length][str1.length];\n}\n\n// Simple Soundex implementation for phonetic matching\nfunction soundex(str) {\n  if (!str || str.length === 0) return \"0000\";\n  \n  str = str.toUpperCase();\n  let soundex = str[0];\n  \n  const codes = {\n    'B': '1', 'F': '1', 'P': '1', 'V': '1',\n    'C': '2', 'G': '2', 'J': '2', 'K': '2', 'Q': '2', 'S': '2', 'X': '2', 'Z': '2',\n    'D': '3', 'T': '3',\n    'L': '4',\n    'M': '5', 'N': '5',\n    'R': '6'\n  };\n  \n  for (let i = 1; i < str.length; i++) {\n    const code = codes[str[i]];\n    if (code && code !== soundex[soundex.length - 1]) {\n      soundex += code;\n    }\n  }\n  \n  return (soundex + \"0000\").substring(0, 4);\n}\n\n// ============================================\n// STEP 4: FIND BEST MATCH WITH LOWER THRESHOLD\n// ============================================\n\nlet bestMatch = null;\nlet highestScore = 0;\nlet matchDetails = null;\nconst minAcceptableScore = 0.25; // Lowered threshold for better fuzzy matching\n\nconsole.log(`\\n🔍 Searching for best match for: \"${inputCarName}\"`);\nconsole.log(`📊 Available cars in database (${validBrochures.length} total):`);\nvalidBrochures.forEach((b, i) => console.log(`   ${i + 1}. \"${b.car_name}\"`));\n\nconsole.log(\"\\n--- Detailed Matching Results ---\");\n\nconst matchResults = [];\nfor (let brochure of validBrochures) {\n  const similarity = calculateSimilarity(inputCarName, brochure.car_name);\n  \n  matchResults.push({\n    car_name: brochure.car_name,\n    brochure_url: brochure.brochure_url,\n    score: similarity.score,\n    type: similarity.type,\n    details: similarity.details\n  });\n  \n  console.log(`📋 \"${brochure.car_name}\"`);\n  console.log(`   Score: ${similarity.score.toFixed(3)} | Type: ${similarity.type}`);\n  console.log(`   Details: ${similarity.details}`);\n  \n  if (similarity.score > highestScore) {\n    highestScore = similarity.score;\n    bestMatch = brochure;\n    matchDetails = similarity;\n  }\n}\n\n// Sort results by score\nmatchResults.sort((a, b) => b.score - a.score);\n\n// ============================================\n// STEP 5: RETURN ENHANCED RESULT\n// ============================================\n\nconsole.log(\"\\n=== 🎯 FINAL RESULT ===\");\n\nif (!bestMatch || highestScore < minAcceptableScore) {\n  const topMatches = matchResults.slice(0, 5);\n  const availableCarsList = validBrochures.map(b => b.car_name).slice(0, 8);\n  \n  console.log(`❌ No suitable match found for \"${inputCarName}\"`);\n  console.log(`Highest score: ${highestScore.toFixed(3)} (minimum required: ${minAcceptableScore})`);\n  \n  const suggestionMessage = `Sorry, I couldn't find a brochure for \"${inputCarName}\". \n\nHere are our available car brochures:\n${availableCarsList.map(name => `• ${name}`).join('\\n')}\n\nPlease reply with one of these car names to get the brochure.`;\n  \n  // FIXED: Return single object instead of array\n  return {\n    brochure_url: null,\n    message: suggestionMessage,\n    error: \"NO_MATCH_FOUND\",\n    input_car_name: inputCarName,\n    available_cars: availableCarsList,\n    top_matches: topMatches.map(m => ({\n      car_name: m.car_name,\n      score: parseFloat(m.score.toFixed(3)),\n      type: m.type\n    })),\n    success: false\n  };\n}\n\n// Success!\nconsole.log(`✅ MATCH FOUND!`);\nconsole.log(`🔍 Input: \"${inputCarName}\"`);\nconsole.log(`🎯 Matched: \"${bestMatch.car_name}\"`);\nconsole.log(`📈 Score: ${(highestScore * 100).toFixed(1)}% (${highestScore.toFixed(3)})`);\nconsole.log(`🏷️ Type: ${matchDetails.type}`);\nconsole.log(`🔗 URL: ${bestMatch.brochure_url}`);\n\n// Determine confidence level\nlet confidence;\nif (highestScore >= 0.9) confidence = \"Excellent\";\nelse if (highestScore >= 0.7) confidence = \"Very High\";\nelse if (highestScore >= 0.5) confidence = \"High\";\nelse if (highestScore >= 0.3) confidence = \"Medium\";\nelse confidence = \"Low\";\n\n// Generate response message\nconst responseMessage = `Here's the brochure for ${bestMatch.car_name}! 📋\n\n${bestMatch.brochure_url}\n\n${highestScore < 0.7 ? `\\n(Note: This is a ${confidence.toLowerCase()} confidence match. If this isn't what you were looking for, please let me know the exact car name!)` : ''}`;\n\n// FIXED: Return single object instead of array\nreturn {\n  // Core data for WhatsApp\n  brochure_url: bestMatch.brochure_url,\n  message: responseMessage,\n  \n  // Match details\n  input_car_name: inputCarName,\n  matched_car_name: bestMatch.car_name,\n  match_score: parseFloat(highestScore.toFixed(3)),\n  match_percentage: parseFloat((highestScore * 100).toFixed(1)),\n  match_type: matchDetails.type,\n  confidence: confidence,\n  \n  // Success indicator\n  success: true,\n  \n  // Alternative matches (for debugging)\n  top_matches: matchResults.slice(0, 3).map(m => ({\n    car_name: m.car_name,\n    score: parseFloat(m.score.toFixed(3)),\n    type: m.type\n  })),\n  \n  // Processing statistics\n  stats: {\n    total_brochures_processed: validBrochures.length,\n    min_score_required: minAcceptableScore,\n    processing_success: true,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        144
+      ],
+      "id": "005930c8-ce6b-4606-8fc8-a52d1970b532",
+      "name": "Code3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawOutput = $input.all().map((item) => item.json.output)[0];\n\n// Step 1: Remove all backticks and \"json\" markdown hints\nconst clean = rawOutput.replace(/`|json|/g, \"\").trim();\n\n// Step 2: Extra safety: remove newlines or weird characters if any\nconst normalized = clean.replace(/\\r?\\n/g, \"\").trim();\n\n// Step 3: Try parsing\nlet parsed;\ntry {\n  parsed = JSON.parse(normalized);\n} catch (err) {\n  throw new Error(\"Failed to parse AI response: \" + normalized);\n}\n\n// Step 4: Output\nreturn {\n  json: {\n    type: parsed.type,\n    message: parsed.message,\n  },\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        192
+      ],
+      "id": "ae103657-083f-4c5d-971a-4d66f27ae10d",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        400
+      ],
+      "id": "ef5114ab-cea2-4e9b-9653-d3b8c0768520",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "hwQ4IUPULVBijig9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "options": {
+          "systemMessage": "=You are a friendly, smart WhatsApp assistant for Maruti Suzuki.  \nYou talk to real customers on WhatsApp and help them with car-related questions or requests.\n\nYour job is to *analyze the user message* and return a JSON with:\n1. type: Classify the message into one of the following categories:\n   - general_query → About car features, price, mileage, EMI, insurance, variants, etc.  \n   - brochure_request → Asking for a brochure, model list, images, or car comparisons  \n   - test_drive → Wanting to book or inquire about a test drive  \n   - availability_check → Asking if a specific car is in stock or available at a showroom  \n   \n2. message: A polite, WhatsApp-style reply in a friendly, respectful tone.  \n   - If the message is valid → reply helpfully and naturally  \n   - If it's out_of_scope → respond calmly, stay brand-aligned, and *promote Maruti Suzuki options if possible*\n\n---\n\n### INSTRUCTIONS:\n- Only return the output as JSON (see format below). No explanation.  \n- If multiple intents are present, select the *most relevant* action for the assistant to perform.  \n- Always promote Maruti Suzuki positively — even for irrelevant inputs.\n- reply shouldnt be so small at the same time it shouldnt be tto long\n---\n\nNow classify and respond to this customer message:\n\n---\n{{user_message}}\n---\n\n### Output format:\n```json\n{\n  \"type\": \"<classified_type>\",\n  \"message\": \"<WhatsApp-style polite and promotional response>\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        512,
+        160
+      ],
+      "id": "212dd598-3265-467e-b430-8fd149c23afb",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        304,
+        160
+      ],
+      "id": "53ee5494-cbea-4073-934d-e47b8037408e",
+      "name": "WhatsApp Trigger1",
+      "webhookId": "99349e02-0e36-4401-919a-0be42bfabb3d",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "wBFeKfKIH130nH84",
+          "name": "WhatsApp OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "#TEST_DRIVE WORKFLOW",
+        "height": 80,
+        "width": 150,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1424,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "e0ef4ad4-cbec-42ce-a3e9-5f87d210d8ce",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "831237963403214",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id }}\n",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        160
+      ],
+      "id": "3c35fe8b-208e-44a3-9eff-54d3131fd839",
+      "name": "Send message4",
+      "webhookId": "843a0939-5acc-429a-8391-adb273c49c6c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ekjB5cH2S4JGxzcI",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "car_brochures",
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        144
+      ],
+      "id": "9f961678-1883-4a25-b742-c629be9066b4",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "8JwqLC3EFPirW9d5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "831237963403214",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        -48
+      ],
+      "id": "7e205c1c-8dbe-4f39-bbdc-fb029e1e3077",
+      "name": "Send message2",
+      "webhookId": "843a0939-5acc-429a-8391-adb273c49c6c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ekjB5cH2S4JGxzcI",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "82f9649f-cf52-40d4-a69c-5f6d341e5735",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "=general_query",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a58749f2-d4eb-4900-877e-1094e1de5446",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "brochure_request",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4a382472-27f5-4774-adec-913d5d1af4c7",
+                    "leftValue": "={{ $json.type }}",
+                    "rightValue": "=test_drive",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1168,
+        144
+      ],
+      "id": "f20cb86e-7941-4126-b001-da3315668cc6",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "**#FOLLW UP BASED ON WHATSAPP -3,4 **",
+        "height": 780,
+        "width": 2932
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -176,
+        -176
+      ],
+      "typeVersion": 1,
+      "id": "54b4e964-8c7c-4341-a943-4a95ce01dd74",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Trigger1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code3": {
+      "main": [
+        [
+          {
+            "node": "Send message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Code3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send message2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a2d6c4fc-fae0-40b1-bd3a-e4891aa1dc51",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f8d3b73a3e7d76a57c6cadcaef8f9201b1ea5124a161b943f19c17838861f83d"
+  },
+  "id": "8YrJ27zOvHGUPBFu",
+  "tags": []
+}

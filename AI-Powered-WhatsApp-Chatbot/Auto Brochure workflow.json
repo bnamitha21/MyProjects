@@ -1,0 +1,369 @@
+{
+  "name": "Auto Brochure workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "FOLLOW UP BASED ON VOICE AGENT CONVERSATION - 2",
+        "height": 320,
+        "width": 1800,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "bc34bc29-fa45-44d0-ac92-067d1e487ffa",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1_tP7mZuED_buORxwh43JmG0TLM15Hx7iyQCE65xJ_SE",
+          "mode": "list",
+          "cachedResultName": "Vapi data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_tP7mZuED_buORxwh43JmG0TLM15Hx7iyQCE65xJ_SE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_tP7mZuED_buORxwh43JmG0TLM15Hx7iyQCE65xJ_SE/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        112
+      ],
+      "id": "c2bac954-4019-45db-9e6f-47895fd87c10",
+      "name": "Google Sheets Trigger2",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "0Yv1pOakxXFJncCl",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "car_brochures",
+        "filterType": "none"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        128
+      ],
+      "id": "dbe78f30-9291-4ba3-9a97-aaf87cf84e4f",
+      "name": "Supabase3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "8JwqLC3EFPirW9d5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log(\"🚀 Starting Car Brochure Matching System...\");\nlet inputCarName = null;\nlet inputData = null;\n\nconsole.log(\"=== STEP 1: Processing Edit Fields Input Data ===\");\n\n// Get the input data from Edit Fields node\ntry {\n  // Method 1: Get from Edit Fields node\n  const editFieldsData = $('Edit Fields1').first().json.output;\n  console.log(\"Edit Fields data found:\", JSON.stringify(editFieldsData, null, 2));\n  \n  if (editFieldsData) {\n    inputData = editFieldsData;\n    console.log(\"Using Edit Fields data:\", JSON.stringify(inputData, null, 2));\n  }\n} catch (error) {\n  console.log(\"Error getting Edit Fields data:\", error.message);\n}\n\n// Method 2: If Edit Fields method failed, try getting from workflow input\nif (!inputData) {\n  try {\n    const workflowInput = $input.first();\n    if (workflowInput && workflowInput.json) {\n      inputData = workflowInput.json;\n      console.log(\"Using workflow input data:\", JSON.stringify(inputData, null, 2));\n    }\n  } catch (error) {\n    console.log(\"Error getting workflow input:\", error.message);\n  }\n}\n\n// Method 3: Check if we have execution context data\nif (!inputData) {\n  try {\n    // Sometimes the data comes through execution context\n    const executionData = $('Edit Fields1').first();\n    if (executionData && executionData.json) {\n      inputData = executionData.json;\n      console.log(\"Using execution context data:\", JSON.stringify(inputData, null, 2));\n    }\n  } catch (error) {\n    console.log(\"Error getting execution context:\", error.message);\n  }\n}\n\n// Extract car name from input data\nif (inputData) {\n  console.log(\"Available fields in input data:\", Object.keys(inputData));\n  \n  // Enhanced list of possible car name fields\n  const possibleCarNameFields = [\n    // Standard variations\n    'output', 'car name', 'car_name', 'Car Name', 'Car_Name', 'CAR_NAME', 'CAR NAME',\n    'carname', 'CarName', 'CARNAME',\n    'name', 'Name', 'NAME',\n    'model', 'Model', 'MODEL',\n    'vehicle', 'Vehicle', 'VEHICLE',\n    'car', 'Car', 'CAR',\n    'brand', 'Brand', 'BRAND',\n    'make', 'Make', 'MAKE',\n    'product', 'Product', 'PRODUCT',\n    'item', 'Item', 'ITEM',\n    // Column letter variations (in case using A, B, C column names)\n    'A', 'B', 'C', 'D', 'E', 'F',\n    // Numbered columns\n    'col1', 'col2', 'col3', 'column1', 'column2', 'column3'\n  ];\n  \n  // Try to find car name in expected fields\n  for (let field of possibleCarNameFields) {\n    if (inputData[field] && typeof inputData[field] === 'string' && inputData[field].trim()) {\n      inputCarName = inputData[field].trim();\n      console.log(`✅ Found car name in field \"${field}\": \"${inputCarName}\"`);\n      break;\n    }\n  }\n  \n  // If still not found, try the first non-empty string value\n  if (!inputCarName) {\n    console.log(\"Car name not found in expected fields, trying all string values...\");\n    const entries = Object.entries(inputData);\n    for (let [key, value] of entries) {\n      if (typeof value === 'string' && value.trim() && value.length > 1) {\n        // Skip obviously non-car-name values\n        const skipValues = ['true', 'false', 'yes', 'no', 'ok', 'done', 'complete'];\n        if (!skipValues.includes(value.toLowerCase())) {\n          inputCarName = value.trim();\n          console.log(`✅ Using value from field \"${key}\": \"${inputCarName}\"`);\n          break;\n        }\n      }\n    }\n  }\n}\n\n// Special handling if inputData is a string (direct output from Edit Fields)\nif (!inputCarName && typeof inputData === 'string' && inputData.trim()) {\n  inputCarName = inputData.trim();\n  console.log(`✅ Using direct string input: \"${inputCarName}\"`);\n}\n\n// Validate car name\nif (!inputCarName) {\n  console.log(\"❌ No car name found in input data\");\n  console.log(\"Available input data:\", JSON.stringify(inputData, null, 2));\n  throw new Error(`❌ No car name found in Edit Fields input data.\n\n🔍 Debugging Info:\n- Input data received: ${JSON.stringify(inputData, null, 2)}\n- Available fields: ${inputData && typeof inputData === 'object' ? Object.keys(inputData).join(', ') : 'None'}\n\n💡 Please ensure:\n1. Your Edit Fields node has an 'output' field with the car name\n2. The car name is not empty\n3. The Edit Fields node is properly configured\n4. The field name should be something like \"output\", \"car name\", \"name\", \"model\", etc.\n\n🔧 Quick fixes:\n- Check if the Edit Fields node has the correct field name\n- Verify that the car name field is not empty\n- Make sure the Edit Fields node is connected properly in the workflow`);\n}\n\nconsole.log(`✅ Successfully extracted car name: \"${inputCarName}\"`);\n\n// ============================================\n// STEP 2: GET BROCHURE DATA FROM SUPABASE\n// ============================================\n\nconsole.log(\"\\n=== STEP 2: Getting brochure data from Supabase ===\");\n\nlet brochures = [];\n\n// Get Supabase data from the current execution items\ntry {\n  brochures = items.map(item => item.json);\n  console.log(`📊 Found ${brochures.length} brochures from Supabase`);\n  \n  // Log first few brochures for debugging\n  if (brochures.length > 0) {\n    console.log(\"Sample brochure data:\", JSON.stringify(brochures[0], null, 2));\n    console.log(\"Available car names:\", brochures.map(b => b.car_name || 'NO_CAR_NAME').slice(0, 5));\n  }\n} catch (error) {\n  console.log(\"❌ Error getting Supabase data:\", error.message);\n}\n\n// Validate brochure data\nif (!brochures || brochures.length === 0) {\n  throw new Error(`❌ No brochure data found from Supabase.\n\n🔍 Please check:\n1. Supabase connection is working\n2. The 'car_brochures' table exists\n3. The table has data\n4. The Supabase node is properly configured\n\n💡 The Supabase node should return data with 'car_name' and 'brochure_url' fields.`);\n}\n\n// Filter valid brochures (must have both car_name and brochure_url)\nconst validBrochures = brochures.filter(b => \n  b.car_name && \n  typeof b.car_name === 'string' && \n  b.car_name.trim() && \n  b.brochure_url && \n  typeof b.brochure_url === 'string' && \n  b.brochure_url.trim()\n);\n\nconsole.log(`✅ ${validBrochures.length} valid brochures found`);\n\nif (validBrochures.length === 0) {\n  throw new Error(`❌ No valid brochures found in Supabase data.\n\n🔍 Each brochure must have:\n- car_name: Non-empty string\n- brochure_url: Non-empty string (URL)\n\n📊 Found ${brochures.length} total records, but none had both required fields.\n\n💡 Sample of what we found:\n${brochures.slice(0, 3).map(b => `- car_name: \"${b.car_name || 'MISSING'}\", brochure_url: \"${b.brochure_url || 'MISSING'}\"`).join('\\n')}`);\n}\n\n// ============================================\n// STEP 3: ENHANCED MATCHING ALGORITHM\n// ============================================\n\nconsole.log(`\\n=== STEP 3: Matching \"${inputCarName}\" with available brochures ===`);\n\n// Advanced text normalization\nfunction normalize(text) {\n  if (!text || typeof text !== 'string') return \"\";\n  return text.toLowerCase()\n             .replace(/[^\\w\\s]/g, '') // Remove punctuation\n             .replace(/\\s+/g, ' ')    // Replace multiple spaces with single space\n             .trim();\n}\n\n// Remove common automotive words that might interfere\nfunction removeCommonWords(text) {\n  const commonWords = [\n    'car', 'auto', 'vehicle', 'model', 'series', 'edition', 'variant',\n    'new', 'latest', 'premium', 'deluxe', 'standard', 'base', 'top',\n    'limited', 'special', 'exclusive', 'luxury', 'sport', 'sports'\n  ];\n  let words = text.split(' ');\n  words = words.filter(word => !commonWords.includes(word.toLowerCase()) && word.length > 1);\n  return words.join(' ');\n}\n\n// Calculate comprehensive similarity score\nfunction calculateSimilarity(input, target) {\n  const normInput = normalize(input);\n  const normTarget = normalize(target);\n  \n  console.log(`  🔍 Comparing: \"${normInput}\" vs \"${normTarget}\"`);\n  \n  // 1. Exact match (perfect score)\n  if (normInput === normTarget) {\n    return { score: 1.0, type: \"Perfect Match\", details: \"Exact match after normalization\" };\n  }\n  \n  // 2. Case-insensitive match without spaces\n  const cleanInput = normInput.replace(/\\s/g, '');\n  const cleanTarget = normTarget.replace(/\\s/g, '');\n  if (cleanInput === cleanTarget) {\n    return { score: 0.98, type: \"Exact Match (No Spaces)\", details: \"Same after removing spaces\" };\n  }\n  \n  // 3. One contains the other (substring matching)\n  if (normTarget.includes(normInput)) {\n    const coverage = normInput.length / normTarget.length;\n    return { \n      score: 0.90 + (coverage * 0.08), \n      type: \"Input Contained\", \n      details: `\"${normInput}\" found in \"${normTarget}\" (${(coverage * 100).toFixed(1)}% coverage)` \n    };\n  }\n  if (normInput.includes(normTarget)) {\n    const coverage = normTarget.length / normInput.length;\n    return { \n      score: 0.85 + (coverage * 0.08), \n      type: \"Target Contained\", \n      details: `\"${normTarget}\" found in \"${normInput}\" (${(coverage * 100).toFixed(1)}% coverage)` \n    };\n  }\n  \n  // 4. Advanced word-based matching\n  const inputWords = normInput.split(' ').filter(w => w.length > 1);\n  const targetWords = normTarget.split(' ').filter(w => w.length > 1);\n  \n  if (inputWords.length === 0 || targetWords.length === 0) {\n    return { score: 0, type: \"No Valid Words\", details: \"No meaningful words found\" };\n  }\n  \n  let exactWordMatches = 0;\n  let partialWordMatches = 0;\n  let matchedWords = [];\n  \n  // Check for exact word matches\n  for (let inputWord of inputWords) {\n    for (let targetWord of targetWords) {\n      if (inputWord === targetWord) {\n        exactWordMatches++;\n        matchedWords.push(inputWord);\n      } else if (inputWord.length > 2 && targetWord.length > 2) {\n        // Partial word matching\n        if (inputWord.includes(targetWord) || targetWord.includes(inputWord)) {\n          partialWordMatches += 0.7;\n          matchedWords.push(`${inputWord}~${targetWord}`);\n        } else if (levenshteinDistance(inputWord, targetWord) <= 1) {\n          partialWordMatches += 0.5;\n          matchedWords.push(`${inputWord}≈${targetWord}`);\n        }\n      }\n    }\n  }\n  \n  // Word-based score\n  const wordScore = (exactWordMatches + partialWordMatches) / Math.max(inputWords.length, targetWords.length);\n  \n  // 5. Character-level similarity (Levenshtein)\n  const maxLen = Math.max(normInput.length, normTarget.length);\n  const charScore = maxLen > 0 ? 1 - (levenshteinDistance(normInput, normTarget) / maxLen) : 0;\n  \n  // 6. N-gram similarity\n  const ngramScore = ngramSimilarity(normInput, normTarget, 2);\n  \n  // 7. Abbreviation matching\n  const abbreviationScore = checkAbbreviations(normInput, normTarget);\n  \n  // 8. Brand-model matching (e.g., \"BMW X5\" vs \"X5\")\n  const brandModelScore = checkBrandModel(normInput, normTarget);\n  \n  // Weighted final score\n  const finalScore = Math.min(1.0, \n    (wordScore * 0.35) + \n    (charScore * 0.25) + \n    (ngramScore * 0.15) + \n    (abbreviationScore * 0.15) + \n    (brandModelScore * 0.10)\n  );\n  \n  // Determine match type\n  let matchType;\n  if (finalScore >= 0.9) matchType = \"Excellent Match\";\n  else if (finalScore >= 0.7) matchType = \"Very Good Match\";\n  else if (finalScore >= 0.5) matchType = \"Good Match\";\n  else if (finalScore >= 0.3) matchType = \"Fair Match\";\n  else matchType = \"Poor Match\";\n  \n  return {\n    score: finalScore,\n    type: matchType,\n    details: `Words: ${wordScore.toFixed(2)}, Chars: ${charScore.toFixed(2)}, N-gram: ${ngramScore.toFixed(2)}, Abbrev: ${abbreviationScore.toFixed(2)}, Brand: ${brandModelScore.toFixed(2)} | Matched: [${matchedWords.join(', ')}]`\n  };\n}\n\n// Levenshtein distance for character-level similarity\nfunction levenshteinDistance(str1, str2) {\n  const matrix = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));\n  \n  for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;\n  for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;\n  \n  for (let j = 1; j <= str2.length; j++) {\n    for (let i = 1; i <= str1.length; i++) {\n      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;\n      matrix[j][i] = Math.min(\n        matrix[j][i - 1] + 1,     // deletion\n        matrix[j - 1][i] + 1,     // insertion\n        matrix[j - 1][i - 1] + cost // substitution\n      );\n    }\n  }\n  \n  return matrix[str2.length][str1.length];\n}\n\n// N-gram similarity\nfunction ngramSimilarity(str1, str2, n = 2) {\n  function getNgrams(str, n) {\n    const ngrams = [];\n    for (let i = 0; i <= str.length - n; i++) {\n      ngrams.push(str.substring(i, i + n));\n    }\n    return ngrams;\n  }\n  \n  const ngrams1 = getNgrams(str1, n);\n  const ngrams2 = getNgrams(str2, n);\n  \n  if (ngrams1.length === 0 && ngrams2.length === 0) return 1;\n  if (ngrams1.length === 0 || ngrams2.length === 0) return 0;\n  \n  const intersection = ngrams1.filter(gram => ngrams2.includes(gram));\n  const union = [...new Set([...ngrams1, ...ngrams2])];\n  \n  return intersection.length / union.length;\n}\n\n// Check for abbreviations (e.g., \"BMW\" vs \"Bayerische Motoren Werke\")\nfunction checkAbbreviations(str1, str2) {\n  const words1 = str1.split(' ');\n  const words2 = str2.split(' ');\n  \n  // Check if one is abbreviation of the other\n  if (words1.length === 1 && words2.length > 1) {\n    const abbrev = words1[0];\n    const fullForm = words2.map(w => w.charAt(0)).join('');\n    return abbrev === fullForm ? 1 : 0;\n  }\n  \n  if (words2.length === 1 && words1.length > 1) {\n    const abbrev = words2[0];\n    const fullForm = words1.map(w => w.charAt(0)).join('');\n    return abbrev === fullForm ? 1 : 0;\n  }\n  \n  return 0;\n}\n\n// Check for brand-model combinations\nfunction checkBrandModel(str1, str2) {\n  const commonBrands = ['toyota', 'honda', 'bmw', 'mercedes', 'audi', 'volkswagen', 'ford', 'chevrolet', 'hyundai', 'kia', 'nissan', 'mazda', 'subaru', 'maruti', 'tata', 'mahindra'];\n  \n  const words1 = str1.split(' ');\n  const words2 = str2.split(' ');\n  \n  // Check if one has brand + model, other has just model\n  for (let brand of commonBrands) {\n    if (words1.includes(brand) && !words2.includes(brand)) {\n      const model1 = words1.filter(w => w !== brand).join(' ');\n      if (model1 === str2) return 0.8;\n    }\n    if (words2.includes(brand) && !words1.includes(brand)) {\n      const model2 = words2.filter(w => w !== brand).join(' ');\n      if (model2 === str1) return 0.8;\n    }\n  }\n  \n  return 0;\n}\n\n// ============================================\n// STEP 4: FIND BEST MATCH\n// ============================================\n\nlet bestMatch = null;\nlet highestScore = 0;\nlet matchDetails = null;\nconst minAcceptableScore = 0.25; // Lowered threshold for better matching\n\nconsole.log(`\\n🔍 Searching for best match for: \"${inputCarName}\"`);\nconsole.log(`📊 Available cars in database (${validBrochures.length} total):`);\nvalidBrochures.forEach((b, i) => console.log(`   ${i + 1}. \"${b.car_name}\"`));\n\nconsole.log(\"\\n--- Detailed Matching Results ---\");\n\nconst matchResults = [];\nfor (let brochure of validBrochures) {\n  const similarity = calculateSimilarity(inputCarName, brochure.car_name);\n  \n  matchResults.push({\n    car_name: brochure.car_name,\n    brochure_url: brochure.brochure_url,\n    score: similarity.score,\n    type: similarity.type,\n    details: similarity.details\n  });\n  \n  console.log(`📋 \"${brochure.car_name}\"`);\n  console.log(`   Score: ${similarity.score.toFixed(3)} | Type: ${similarity.type}`);\n  console.log(`   Details: ${similarity.details}`);\n  \n  if (similarity.score > highestScore) {\n    highestScore = similarity.score;\n    bestMatch = brochure;\n    matchDetails = similarity;\n  }\n}\n\n// Sort results by score for better debugging\nmatchResults.sort((a, b) => b.score - a.score);\n\n// ============================================\n// STEP 5: VALIDATE AND RETURN RESULT\n// ============================================\n\nconsole.log(\"\\n=== 🎯 FINAL RESULT ===\");\n\nif (!bestMatch || highestScore < minAcceptableScore) {\n  const topMatches = matchResults.slice(0, 5);\n  const availableCarsList = validBrochures.map(b => `\"${b.car_name}\"`).join(', ');\n  \n  console.log(`❌ No suitable match found for \"${inputCarName}\"`);\n  console.log(`Highest score: ${highestScore.toFixed(3)} (minimum required: ${minAcceptableScore})`);\n  \n  throw new Error(`❌ No suitable match found for \"${inputCarName}\"\n\n📊 Search Results:\n${topMatches.map(m => `• \"${m.car_name}\" - Score: ${m.score.toFixed(3)} (${m.type})`).join('\\n')}\n\n🚗 All available cars: ${availableCarsList}\n\n💡 Suggestions:\n1. Check spelling of \"${inputCarName}\"\n2. Try using just the model name (e.g., \"Alto\" instead of \"Maruti Suzuki Alto\")\n3. Verify the car exists in your Supabase database\n4. Consider adding the car to your database if it's missing\n\n🔍 The search used fuzzy matching and was case-insensitive.\n⚙️ Minimum match score required: ${minAcceptableScore} (Current best: ${highestScore.toFixed(3)})`);\n}\n\n// Success!\nconsole.log(`✅ PERFECT MATCH FOUND!`);\nconsole.log(`🔍 Input: \"${inputCarName}\"`);\nconsole.log(`🎯 Matched: \"${bestMatch.car_name}\"`);\nconsole.log(`📈 Score: ${(highestScore * 100).toFixed(1)}% (${highestScore.toFixed(3)})`);\nconsole.log(`🏷️ Type: ${matchDetails.type}`);\nconsole.log(`🔗 URL: ${bestMatch.brochure_url}`);\n\n// Simple message with brochure link\nconst message = `Here is the brochure: ${bestMatch.brochure_url}`;\n\n// Return simple result\nreturn [{\n  json: {\n    message: message,\n    brochure_url: bestMatch.brochure_url,\n    car_name: bestMatch.car_name\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        144
+      ],
+      "id": "681e88a0-9d43-4242-9b45-f190e76e560d",
+      "name": "Code4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6aea9c84-08a5-4e08-8417-e8266513395b",
+              "name": "summary",
+              "value": "={{ $json.summary }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        128
+      ],
+      "id": "8c622bc7-4e4c-40b5-be95-d3c783fd4a73",
+      "name": "Edit Fields",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.summary }}",
+        "options": {
+          "systemMessage": "extract car name from summary and output only car name strictly\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        816,
+        128
+      ],
+      "id": "c4b8c318-9650-40ba-944d-f98484a42974",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        816,
+        272
+      ],
+      "id": "8fd74b6c-3f87-4aaa-a751-cabb6a45b855",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "hwQ4IUPULVBijig9",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "010cbf22-4431-4cfc-b086-8d17fc2754db",
+              "name": "output",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        128
+      ],
+      "id": "49a66240-22ed-4baa-9497-8128bca257a8",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "maxItems": 2,
+        "keep": "lastItems"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        672,
+        112
+      ],
+      "id": "bcc972a5-16ac-4411-ab8b-9e33acb27103",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "398cbd83-8f52-4b16-a411-202a696c8af8",
+              "leftValue": "={{ $json.summary }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        128
+      ],
+      "id": "e7394a27-dc75-40b9-848a-fd72e5735a38",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "831237963403214",
+        "recipientPhoneNumber": "+9167569509408",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        1648,
+        144
+      ],
+      "id": "29a977c4-466c-46c9-8a7c-d1d66403b3b8",
+      "name": "Send message",
+      "webhookId": "db3ab50c-cf49-4bc5-948a-8ee89657a0d1",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "ekjB5cH2S4JGxzcI",
+          "name": "WhatsApp account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase3": {
+      "main": [
+        [
+          {
+            "node": "Code4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code4": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Supabase3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1614d3f4-7d95-41f1-b251-7aedec1cbcb4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f8d3b73a3e7d76a57c6cadcaef8f9201b1ea5124a161b943f19c17838861f83d"
+  },
+  "id": "EWCd5ABEgRuI9o05",
+  "tags": []
+}

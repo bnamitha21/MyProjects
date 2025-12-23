@@ -1,0 +1,384 @@
+{
+  "name": "vapi review",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.vapi.ai/call",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ce8e61e1-072c-4cc1-b45e-6065feb91389"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "id": "4d317776-290f-4fc6-822a-f9763d87a0e4",
+      "name": "VAPI AI Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d51b3d43-449f-4819-92e9-b2c8323c1aa0",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "4346751f-f73a-477e-b3d2-4d82f473abc5",
+              "name": "assistantId",
+              "value": "={{ $json.assistantId }}",
+              "type": "string"
+            },
+            {
+              "id": "ef06a454-050a-478a-b357-8d03fddcb0a2",
+              "name": "phoneNumberId",
+              "value": "={{ $json.phoneNumberId }}",
+              "type": "string"
+            },
+            {
+              "id": "75e618ac-c4bf-4858-8d8c-c3c9b299872a",
+              "name": "customer",
+              "value": "={{ $json.customer }}",
+              "type": "object"
+            },
+            {
+              "id": "b3502c09-03ea-4831-b10a-516bd7e44c15",
+              "name": "startedAt",
+              "value": "={{ $json.startedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "7bf183be-e773-4dc0-8bd2-982c7cc50270",
+              "name": "endedAt",
+              "value": "={{ $json.endedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "7fe35637-42cd-4175-b725-dfe0f9a93949",
+              "name": "transcript",
+              "value": "={{ $json.transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "168de44f-9288-4f8c-a2fd-b1d4b094dc06",
+              "name": "analysis.summary",
+              "value": "={{ $json.analysis.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "b66cf142-e608-403c-a9b6-bdfcf1238730",
+              "name": "analysis.successEvaluation",
+              "value": "={{ $json.analysis.successEvaluation }}",
+              "type": "string"
+            },
+            {
+              "id": "b0cf2faa-caf0-49fd-aae7-049c75bd7b55",
+              "name": "endedReason",
+              "value": "={{ $json.endedReason }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": "=",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3e4ceb3e-a44c-4a40-85cc-2469f7c467a8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1_tP7mZuED_buORxwh43JmG0TLM15Hx7iyQCE65xJ_SE",
+          "mode": "list",
+          "cachedResultName": "Vapi data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_tP7mZuED_buORxwh43JmG0TLM15Hx7iyQCE65xJ_SE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_tP7mZuED_buORxwh43JmG0TLM15Hx7iyQCE65xJ_SE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.id }}",
+            "assistantId": "={{ $json.assistantId }}",
+            "phoneNumberId": "={{ $json.phoneNumberId }}",
+            "customerNumber": "={{ $json.customerNumber }}",
+            "startedAt": "={{ $json.startedAt }}",
+            "endedAt": "={{ $json.endedAt }}",
+            "transcript": "={{ $json.transcript }}",
+            "summary": "={{ $json.summary }}",
+            "leadType": "={{ $json.leadType }}",
+            "nextAction": "={{ $json.nextAction }}",
+            "successEvaluation": "={{ $json.successEvaluation }}",
+            "endedReason": "={{ $json.endedReason }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "assistantId",
+              "displayName": "assistantId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phoneNumberId",
+              "displayName": "phoneNumberId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customerNumber",
+              "displayName": "customerNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "startedAt",
+              "displayName": "startedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "endedAt",
+              "displayName": "endedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "leadType",
+              "displayName": "leadType",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nextAction",
+              "displayName": "nextAction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "successEvaluation",
+              "displayName": "successEvaluation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "endedReason",
+              "displayName": "endedReason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        0
+      ],
+      "id": "5f1db899-1ed5-4bbd-b54b-93302d1d707c",
+      "name": "Append or update row in sheet",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "AmA7GuxeO60Bttze",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\n\n// Process each item\nconst outputItems = items.map(item => {\n  const data = item.json;\n  \n  // Initialize all fields\n  let customerNumber = '';\n  let summary = '';\n  let leadType = '';\n  let nextAction = '';\n  let successEvaluation = '';\n  \n  // ===== EXTRACT CUSTOMER NUMBER =====\n  if (data.customer) {\n    try {\n      const customerObj = typeof data.customer === 'string' \n        ? JSON.parse(data.customer) \n        : data.customer;\n      \n      customerNumber = customerObj.number || customerObj.phoneNumber || customerObj.phone || '';\n    } catch (e) {\n      customerNumber = String(data.customer);\n    }\n  }\n  \n  // ===== EXTRACT ANALYSIS FIELDS =====\n  // The analysis field contains the complete JSON string with all nested data\n  if (data.analysis) {\n    try {\n      const analysisObj = typeof data.analysis === 'string' \n        ? JSON.parse(data.analysis) \n        : data.analysis;\n      \n      // Extract summary object which contains summary text, leadType, and nextAction\n      if (analysisObj.summary) {\n        const summaryObj = typeof analysisObj.summary === 'string'\n          ? JSON.parse(analysisObj.summary)\n          : analysisObj.summary;\n        \n        // Extract the actual summary text\n        summary = summaryObj.summary || '';\n        \n        // Extract leadType\n        leadType = summaryObj.leadType || summaryObj.lead_type || '';\n        \n        // Extract nextAction\n        nextAction = summaryObj.nextAction || summaryObj.next_action || summaryObj.nextBasedAction || '';\n      }\n      \n      // Extract successEvaluation\n      successEvaluation = analysisObj.successEvaluation || analysisObj.success_evaluation || '';\n      \n    } catch (e) {\n      console.error('Error parsing analysis:', e);\n    }\n  }\n  \n  // ===== EXTRACT TRANSCRIPT =====\n  let transcript = '';\n  if (data.transcript) {\n    try {\n      const transcriptData = typeof data.transcript === 'string'\n        ? JSON.parse(data.transcript)\n        : data.transcript;\n      \n      if (Array.isArray(transcriptData)) {\n        // Format transcript array as readable text\n        transcript = transcriptData.map(msg => \n          `${msg.role || 'speaker'}: ${msg.content || msg.message || ''}`\n        ).join('\\n\\n');\n      } else if (typeof transcriptData === 'string') {\n        transcript = transcriptData;\n      } else {\n        transcript = JSON.stringify(transcriptData);\n      }\n    } catch (e) {\n      transcript = String(data.transcript);\n    }\n  }\n  \n  // ===== RETURN CLEANED DATA =====\n  return {\n    json: {\n      id: data.id || '',\n      assistantId: data.assistantId || '',\n      phoneNumberId: data.phoneNumberId || '',\n      customerNumber: customerNumber,\n      startedAt: data.startedAt || '',\n      endedAt: data.endedAt || '',\n      transcript: transcript,\n      summary: summary,\n      leadType: leadType,\n      nextAction: nextAction,\n      successEvaluation: successEvaluation,\n      endedReason: data.endedReason || ''\n    }\n  };\n});\n\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "6b2bf718-3bc9-4c8b-abaa-973ddee8a349",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9716ef49-24ec-4672-80aa-3bc5f0ad4e14",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "VAPI AI Call": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "VAPI AI Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5e9e7e05-a720-47f5-afdf-aaa5e2502ac6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f8d3b73a3e7d76a57c6cadcaef8f9201b1ea5124a161b943f19c17838861f83d"
+  },
+  "id": "MF1JmWnnFNrnPIaz",
+  "tags": []
+}

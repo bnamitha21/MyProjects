@@ -1,0 +1,76 @@
+{
+  "name": "vapi call",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/call",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ce8e61e1-072c-4cc1-b45e-6065feb91389"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assistantId\": \"674373da-f2a2-4d7a-8e3a-a1e2aa23705c\",\n  \"phoneNumberId\": \"d195e0f2-f23d-41e8-a48a-ad182c2d3945\",\n  \"customer\": {\n    \"number\": \"{{ $json.body.phone }}\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -64,
+        -32
+      ],
+      "id": "2ebfe5c1-625c-4677-a3b1-69b2701efb75",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "94da181e-ed16-417d-8a40-dc882527d1ff",
+        "options": {
+          "allowedOrigins": "*",
+          "responseData": "your call recieved"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -32
+      ],
+      "id": "285499a8-c3be-4d7e-8b85-55b68abc4eb2",
+      "name": "Webhook",
+      "webhookId": "94da181e-ed16-417d-8a40-dc882527d1ff"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "84b7fea4-bd1a-4d7c-98a1-eb6ef2055f8e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f8d3b73a3e7d76a57c6cadcaef8f9201b1ea5124a161b943f19c17838861f83d"
+  },
+  "id": "MDiKvqPIHWTJTUAD",
+  "tags": []
+}
