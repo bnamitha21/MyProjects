@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Teammate Feedback{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 0 auto;">
+    <h1 class="text-gradient" style="margin-bottom: 0.5rem;">Teammate Feedback</h1>
+    <p style="margin-bottom: 2rem;">Help your team members grow by providing constructive reviews and rating their collaboration.</p>
+
+    <div class="card" style="margin-bottom: 2rem; border-color: rgba(16, 185, 129, 0.2); background: rgba(16, 185, 129, 0.01);">
+        <h3 style="color: var(--success); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+            <span>🏆</span> Hackathon Completed: {{ team.name }}
+        </h3>
+        <p style="margin-bottom: 0; font-size: 0.9rem;">
+            Please take a moment to rate each of your teammates. Reviews are displayed anonymously on their public profile cards.
+        </p>
+    </div>
+
+    {% if teammates %}
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            {% for member in teammates %}
+                <div class="card">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-glass); padding-bottom: 1rem;">
+                        {% if member.photo and member.photo != 'default_avatar.png' %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="{{ member.name }}" class="avatar" style="width: 50px; height: 50px;">
+                        {% else %}
+                            <div class="avatar" style="width: 50px; height: 50px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 700; color: white;">
+                                {{ member.name[0] | upper }}
+                            </div>
+                        {% endif %}
+                        
+                        <div>
+                            <h3 style="margin-bottom: 0.15rem; font-size: 1.1rem;">{{ member.name }}</h3>
+                            <span class="badge badge-role">{{ member.role }}</span>
+                        </div>
+                    </div>
+                    
+                    <form action="{{ url_for('feedback.rate_teammates', team_id=team_id) }}" method="POST">
+                        <input type="hidden" name="reviewee_id" value="{{ member.user_id }}">
+                        
+                        <div class="form-group">
+                            <label>Teammate Rating</label>
+                            <!-- Custom css-powered reverse star selection widget -->
+                            <div class="star-rating">
+                                <input type="radio" id="star5-{{ member.user_id }}" name="rating" value="5" required>
+                                <label for="star5-{{ member.user_id }}">★</label>
+                                
+                                <input type="radio" id="star4-{{ member.user_id }}" name="rating" value="4">
+                                <label for="star4-{{ member.user_id }}">★</label>
+                                
+                                <input type="radio" id="star3-{{ member.user_id }}" name="rating" value="3">
+                                <label for="star3-{{ member.user_id }}">★</label>
+                                
+                                <input type="radio" id="star2-{{ member.user_id }}" name="rating" value="2">
+                                <label for="star2-{{ member.user_id }}">★</label>
+                                
+                                <input type="radio" id="star1-{{ member.user_id }}" name="rating" value="1">
+                                <label for="star1-{{ member.user_id }}">★</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="comment-{{ member.user_id }}">Feedback & Comments</label>
+                            <textarea id="comment-{{ member.user_id }}" name="comment" class="form-control" placeholder="Aravind was a great developer! Communicated really well and delivered the database schemas on time..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            Submit Review
+                        </button>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <!-- Success finish state -->
+        <div class="card" style="text-align: center; padding: 3rem;">
+            <span style="font-size: 3rem;">🎉</span>
+            <h2 style="margin-top: 1rem; margin-bottom: 0.5rem;">All Teammates Rated!</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">
+                Thank you! You have successfully submitted feedback for all other members of your squad.
+            </p>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary" style="display: inline-flex;">
+                Back to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
