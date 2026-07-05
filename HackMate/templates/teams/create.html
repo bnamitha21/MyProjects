@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Create Team{% endblock %}
+
+{% block content %}
+<div style="max-width: 640px; margin: 2rem auto;">
+
+    <div class="dash-hero" style="margin-bottom: 1.5rem;">
+        <div class="dash-hero-badge">⚡ New Squad</div>
+        <h1 class="text-gradient" style="font-size: 2.2rem; margin-bottom: 0.4rem;">Form a Team</h1>
+        <p>Start a new squad, target a hackathon with real dates, and list the developer roles you need.</p>
+    </div>
+
+    <div class="card" style="padding: 2.5rem;">
+        <form action="{{ url_for('teams.create_team') }}" method="POST">
+
+            <!-- Team Name -->
+            <div class="form-group">
+                <label for="name">Team Name <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="name" name="name" class="form-control"
+                       placeholder="e.g. Code Crafters, Neural Squad..." required>
+            </div>
+
+            <!-- Target Hackathon -->
+            <div class="form-group">
+                <label for="hackathon_name">Target Hackathon <span style="color: var(--danger);">*</span></label>
+                <input type="text" id="hackathon_name" name="hackathon_name" class="form-control"
+                       placeholder="e.g. Smart India Hackathon 2026" required>
+            </div>
+
+            <!-- Hackathon Dates -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="start_date">
+                        Hackathon Start Date
+                        <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
+                    </label>
+                    <input type="date" id="start_date" name="start_date" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">
+                        Hackathon End Date
+                        <span style="color: var(--text-muted); font-weight: 400;">(optional)</span>
+                    </label>
+                    <input type="date" id="end_date" name="end_date" class="form-control">
+                </div>
+            </div>
+
+            <!-- Date info tip -->
+            <div style="background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 0.5rem; align-items: flex-start;">
+                <span style="font-size: 1rem; flex-shrink: 0;">💡</span>
+                <span>Adding dates lets the system detect if a student has a schedule conflict with another hackathon. If no dates are added, any student can join freely.</span>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label for="description">Team Description / Mission</label>
+                <textarea id="description" name="description" class="form-control"
+                          style="min-height: 90px;"
+                          placeholder="Describe your project idea and what you plan to build..."></textarea>
+            </div>
+
+            <!-- Required Roles -->
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label>Developer Roles Needed</label>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    Type role names and press <strong>Enter</strong> or <strong>comma</strong> to add tags.
+                </p>
+                <input type="hidden" name="required_roles" id="roles-hidden" value="">
+                <div class="tag-input-container" id="roles-input-wrapper">
+                    <input type="text" id="roles-text-input" placeholder="Frontend, UI/UX, AI/ML...">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 2;">
+                    🚀 Create Team
+                </button>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-secondary" style="flex: 1; text-align: center;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeTagInput('roles-input-wrapper', 'roles-hidden', 'roles-text-input');
+
+        // Ensure end_date >= start_date dynamically
+        const startInput = document.getElementById('start_date');
+        const endInput   = document.getElementById('end_date');
+        startInput.addEventListener('change', () => {
+            if (startInput.value) {
+                endInput.min = startInput.value;
+            }
+        });
+    });
+</script>
+{% endblock %}
