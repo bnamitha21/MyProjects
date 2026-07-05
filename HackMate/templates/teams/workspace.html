@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.name }} Workspace{% endblock %}
+
+{% block content %}
+{% if team.status == 'completed' %}
+<div class="completed-banner" style="margin-bottom: 1.5rem;">
+    <div class="banner-left">
+        <span class="banner-icon">🏆</span>
+        <div>
+            <h3>Hackathon Completed!</h3>
+            <p>Your team finished the hackathon. Don't forget to rate your teammates!</p>
+        </div>
+    </div>
+    <a href="{{ url_for('feedback.rate_teammates', team_id=team.id) }}" class="btn btn-success btn-sm">
+        ★ Rate Teammates
+    </a>
+</div>
+{% endif %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <div>
+        <h1 class="text-gradient" style="margin-bottom: 0.25rem;">{{ team.name }} Workspace</h1>
+        <p style="margin-bottom: 0;">Collaborate, manage roles, review join requests, and track hackathon milestones.</p>
+    </div>
+
+    {% if team.status == 'completed' %}
+        <a href="{{ url_for('feedback.rate_teammates', team_id=team.id) }}" class="btn btn-success">
+            ★ Rate Teammates
+        </a>
+    {% endif %}
+</div>
+
+<div class="workspace-grid">
+    
+    <!-- LEFT SIDE: Team Details, Member management, Leave Team -->
+    <div>
+        <!-- Team Profile Card -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                <div>
+                    <h2>{{ team.name }}</h2>
+                    <p style="font-size: 0.9rem; color: var(--text-muted);">
+                        Target Hackathon: <strong>{{ team.hackathon_name }}</strong>
+                    </p>
+                    <p style="font-size: 0.9rem; margin-top: 0.25rem;">
+                        Created by: <strong>{{ team.creator_name }}</strong>
+                    </p>
+                </div>
+                
+                <div>
+                    <span class="badge {% if team.status == 'recruiting' %}badge-avail-available{% elif team.status == 'full' %}badge-avail-tentative{% else %}badge-primary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                        {{ team.status | capitalize }}
+                    </span>
+                </div>
+            </div>
+            
+            <p style="white-space: pre-wrap; margin-bottom: 1.5rem;">{{ team.description or "No description provided." }}</p>
+            
+            {% if is_creator %}
+                <!-- Creator status controls -->
+                <form action="{{ url_for('teams.update_status', team_id=team.id) }}" method="POST" style="border-top: 1px solid var(--border-glass); padding-top: 1.25rem; display: flex; align-items: flex-end; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label for="status" style="font-size: 0.85rem; font-weight: 600; color: var(--text-light); display: block; margin-bottom: 0.5rem;">
+                            Update Recruitment Status
+                        </label>
+                        <select id="status" name="status" class="form-control">
+                            <option value="recruiting" {% if team.status == 'recruiting' %}selected{% endif %}>🟢 Recruiting (Accepting Join Requests)</option>
+                            <option value="full" {% if team.status == 'full' %}selected{% endif %}>🟡 Full (Team Locked)</option>
+                            <option value="completed" {% if team.status == 'completed' %}selected{% endif %}>🏆 Completed (Hackathon Finished)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-sm" style="height: 45px;">Update Status</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        <!-- Members List Card -->
+        <div class="card">
+            <h2>Team Members ({{ members | length }})</h2>
+            
+            <div class="member-list" style="margin-top: 1rem;">
+                {% for member in members %}
+                    <div class="member-row">
+                        <div class="member-info">
+                            {% if member.photo and member.photo != 'default_avatar.png' %}
+                                <img src="{{ url_for('static', filename='uploads/' ~ member.photo) }}" alt="{{ member.name }}" class="member-avatar">
+                            {% else %}
+                                <div class="member-avatar" style="background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: white;">
+                                    {{ member.name[0] | upper }}
+                                </div>
+                            {% endif %}
+                            
+                            <div>
+                                <h4 style="margin-bottom: 0.15rem; font-size: 0.95rem;">
+                                    <a href="{{ url_for('profile.view_profile', user_id=member.user_id) }}" style="color: var(--text-white); text-decoration: none;">
+                                        {{ member.name }}
+                                    </a>
+                                    {% if member.user_id == team.creator_id %}
+                                        <span style="font-size: 0.75rem; color: var(--warning); margin-left: 0.25rem;">👑</span>
+                                    {% endif %}
+                                </h4>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0;">
+                                    Hacker role: <span class="badge badge-role" style="font-size: 0.65rem; padding: 0.1rem 0.3rem;">{{ member.profile_role }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <!-- Show their specific role in team (e.g. Member or Creator / Backend Dev) -->
+                            <span class="badge badge-primary" style="font-size: 0.75rem;">{{ member.role }}</span>
+                            
+                            {% if is_creator and member.user_id != current_user.id %}
+                                <!-- Creator can kick members -->
+                                <form action="{{ url_for('teams.kick_member', team_id=team.id, member_id=member.user_id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" data-confirm="Are you sure you want to remove {{ member.name }} from the team?">
+                                        Kick
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Leave / Delete team action -->
+            <div style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.25rem; text-align: right;">
+                <form action="{{ url_for('teams.leave_team', team_id=team.id) }}" method="POST" style="display: inline-block;">
+                    {% if is_creator %}
+                        <button type="submit" class="btn btn-danger btn-sm" data-confirm="WARNING: You are the Creator. Leaving the team will permanently delete this team and reset all members availability. Proceed?">
+                            Disband & Delete Team
+                        </button>
+                    {% else %}
+                        <button type="submit" class="btn btn-danger btn-sm" data-confirm="Are you sure you want to leave this team? Your availability status will reset to Available.">
+                            Leave Team
+                        </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- RIGHT SIDE: Required Roles & Invitation lists -->
+    <div>
+        <!-- Required Roles Config Card -->
+        <div class="card">
+            <h2>Roles recruiting</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 1.5rem 0;">
+                {% if open_roles %}
+                    {% for role in open_roles %}
+                        <span class="badge badge-role">{{ role }}</span>
+                    {% endfor %}
+                {% else %}
+                    <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">No required open roles listed.</p>
+                {% endif %}
+            </div>
+            
+            {% if is_creator %}
+                <!-- Creator can edit required roles -->
+                <form action="{{ url_for('teams.update_roles', team_id=team.id) }}" method="POST" style="border-top: 1px solid var(--border-glass); padding-top: 1.25rem;">
+                    <div class="form-group">
+                        <label style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">Update Required Roles</label>
+                        <input type="hidden" name="required_roles" id="roles-hidden" value="{{ open_roles_val }}">
+                        <div class="tag-input-container" id="roles-input-wrapper" style="margin-bottom: 1rem;">
+                            <input type="text" id="roles-text-input" placeholder="Add roles...">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%;">Save Roles</button>
+                </form>
+            {% endif %}
+        </div>
+        
+        <!-- Invitations & Join requests Management (Creator Only) -->
+        {% if is_creator %}
+            <!-- Inbound join requests (student_to_team) -->
+            <div class="card">
+                <h2>Join Requests ({{ join_requests | length }})</h2>
+                {% if join_requests %}
+                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                        {% for req in join_requests %}
+                            <div style="padding: 0.75rem; border: 1px solid var(--border-glass); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.01);">
+                                <span style="font-size: 0.9rem;">
+                                    <a href="{{ url_for('profile.view_profile', user_id=req.sender_id) }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                                        {{ req.sender_name }}
+                                    </a>
+                                </span>
+                                
+                                <div style="display: flex; gap: 0.35rem;">
+                                    <a href="{{ url_for('invitations.accept_invitation', invite_id=req.id) }}" class="btn btn-primary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Accept</a>
+                                    <a href="{{ url_for('invitations.reject_invitation', invite_id=req.id) }}" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" data-confirm="Reject this request to join?">Decline</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-top: 0.5rem;">No active requests to join.</p>
+                {% endif %}
+            </div>
+            
+            <!-- Outbound sent invitations (team_to_student) -->
+            <div class="card">
+                <h2>Sent Invitations ({{ sent_invitations | length }})</h2>
+                {% if sent_invitations %}
+                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                        {% for invite in sent_invitations %}
+                            <div style="padding: 0.75rem; border: 1px solid var(--border-glass); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.01);">
+                                <div>
+                                    <span style="font-size: 0.9rem;">
+                                        Invited: <strong>
+                                            <a href="{{ url_for('profile.view_profile', user_id=invite.receiver_id) }}" style="color: var(--text-white); text-decoration: none;">
+                                                {{ invite.receiver_name }}
+                                            </a>
+                                        </strong>
+                                    </span>
+                                    <span class="badge badge-avail-tentative" style="font-size: 0.65rem; padding: 0.1rem 0.3rem; display: block; width: fit-content; margin-top: 0.25rem;">
+                                        {{ invite.status }}
+                                    </span>
+                                </div>
+                                
+                                <form action="{{ url_for('invitations.cancel_invitation', invite_id=invite.id) }}" method="POST" style="margin: 0;">
+                                    <input type="hidden" name="redirect_url" value="{{ request.path }}">
+                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" data-confirm="Cancel this invitation?">
+                                        Withdraw
+                                    </button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic; margin-top: 0.5rem;">No active sent invites.</p>
+                {% endif %}
+                
+                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-glass); padding-top: 1.25rem; text-align: center;">
+                    <a href="{{ url_for('discover.students') }}" class="btn btn-primary btn-sm" style="width: 100%; justify-content: center;">
+                        🔍 Find Students to Invite
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if is_creator %}
+<script>
+    // Initialize tag input for open roles inside workspace edit panel
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeTagInput('roles-input-wrapper', 'roles-hidden', 'roles-text-input');
+    });
+</script>
+{% endif %}
+{% endblock %}

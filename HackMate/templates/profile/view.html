@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }}'s Profile{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    
+    <!-- Left Column: User Summary Card -->
+    <div>
+        <div class="card profile-summary-card">
+            <div class="avatar-wrapper">
+                {% if profile.photo and profile.photo != 'default_avatar.png' %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ profile.photo) }}" alt="{{ user.name }}" class="avatar avatar-pulse">
+                {% else %}
+                    <div class="avatar avatar-pulse" style="background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 700; color: white;">
+                        {{ user.name[0] | upper }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <h3>{{ user.name }}</h3>
+            <p class="college-text" style="margin-bottom: 0.25rem;">{{ profile.college or "No College Added" }}</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                {{ profile.branch or "No Branch" }} {% if profile.year %}(Year {{ profile.year }}){% endif %}
+            </p>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <span class="badge badge-role">{{ profile.role }}</span>
+                <span class="badge badge-primary">{{ profile.experience }}</span>
+                <span class="badge badge-avail-{{ profile.availability | lower }}">{{ profile.availability }}</span>
+            </div>
+            
+            <!-- Contact / Socials -->
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; text-align: left; margin-bottom: 1.5rem; border-top: 1px solid var(--border-glass); padding-top: 1.25rem;">
+                <span style="font-size: 0.9rem; color: var(--text-muted);">
+                    <strong>Email:</strong> {{ user.email }}
+                </span>
+                {% if profile.github %}
+                <span style="font-size: 0.9rem;">
+                    <strong>GitHub:</strong> <a href="https://{{ profile.github }}" target="_blank" style="color: var(--primary); text-decoration: none;">{{ profile.github }}</a>
+                </span>
+                {% endif %}
+                {% if profile.linkedin %}
+                <span style="font-size: 0.9rem;">
+                    <strong>LinkedIn:</strong> <a href="https://{{ profile.linkedin }}" target="_blank" style="color: var(--primary); text-decoration: none;">{{ profile.linkedin }}</a>
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Profile actions (Invite / Edit) -->
+            {% if current_user.id == user.id %}
+                <a href="{{ url_for('profile.edit_profile') }}" class="btn btn-secondary" style="width: 100%;">Edit Profile</a>
+            {% elif my_team %}
+                {% if is_member %}
+                    <span class="badge badge-avail-available" style="padding: 0.6rem; width: 100%; justify-content: center;">Teammate</span>
+                {% elif pending_invite %}
+                    {% if pending_invite.sender_id == current_user.id %}
+                        <!-- We sent them an invite, let's allow canceling it -->
+                        <form action="{{ url_for('invitations.cancel_invitation', invite_id=pending_invite.id) }}" method="POST">
+                            <input type="hidden" name="redirect_url" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-danger btn-sm" style="width: 100%;" data-confirm="Cancel this team invitation?">
+                                Cancel Invitation
+                            </button>
+                        </form>
+                    {% else %}
+                        <!-- They requested to join, we can accept/reject -->
+                        <div style="display: flex; gap: 0.5rem; width: 100%;">
+                            <a href="{{ url_for('invitations.accept_invitation', invite_id=pending_invite.id) }}" class="btn btn-primary btn-sm" style="flex: 1;">Accept</a>
+                            <a href="{{ url_for('invitations.reject_invitation', invite_id=pending_invite.id) }}" class="btn btn-secondary btn-sm" style="flex: 1;" data-confirm="Reject this request to join?">Reject</a>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <!-- No invitation exists, team creator can invite the student -->
+                    <form action="{{ url_for('invitations.send_invitation') }}" method="POST">
+                        <input type="hidden" name="receiver_id" value="{{ user.id }}">
+                        <input type="hidden" name="team_id" value="{{ my_team.id }}">
+                        <input type="hidden" name="type" value="team_to_student">
+                        <input type="hidden" name="redirect_url" value="{{ request.path }}">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            Invite to Team
+                        </button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <p style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+                    Create a team to invite {{ user.name }}.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Right Column: Details, Projects & Reviews -->
+    <div>
+        <!-- Bio and Description -->
+        <div class="card">
+            <h2>About</h2>
+            <p style="white-space: pre-wrap;">{{ profile.bio or "No bio details added yet." }}</p>
+            
+            <h3 style="margin-top: 2rem;">Skills</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+                {% if skills %}
+                    {% for skill in skills %}
+                        <span class="tag" style="background: rgba(124, 58, 237, 0.15); border: 1px solid rgba(124, 58, 237, 0.25);">{{ skill }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">No skills listed.</span>
+                {% endif %}
+            </div>
+            
+            <h3>Interests / Domains</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                {% if interests %}
+                    {% for interest in interests %}
+                        <span class="tag" style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-glass);">{{ interest }}</span>
+                    {% endfor %}
+                {% else %}
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">No interests listed.</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Projects Section -->
+        <div class="card">
+            <h2>Projects Portfolio</h2>
+            {% if projects %}
+                <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                    {% for project in projects %}
+                        <div style="padding: 1.25rem; border: 1px solid var(--border-glass); border-radius: 12px; background: rgba(255, 255, 255, 0.01);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h3 style="margin-bottom: 0; color: var(--text-white);">{{ project.title }}</h3>
+                                {% if project.repo_link %}
+                                    <a href="https://{{ project.repo_link }}" target="_blank" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 500;">
+                                        🔗 Link
+                                    </a>
+                                {% endif %}
+                            </div>
+                            <p style="font-size: 0.9rem; margin-bottom: 0;">{{ project.description or "No description provided." }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.95rem; font-style: italic;">No projects added yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Teammate Reviews Section -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2>Teammate Feedback</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    {% if rating_stats.avg_rating %}
+                        <span style="font-size: 1.3rem; font-weight: 700; color: var(--warning);">
+                            ★ {{ "%.1f" | format(rating_stats.avg_rating) }}
+                        </span>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">
+                            ({{ rating_stats.total_reviews }} reviews)
+                        </span>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 0.9rem;">No ratings yet</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if reviews %}
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for review in reviews %}
+                        <div style="padding: 1rem; border-bottom: 1px solid var(--border-glass);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-white);">
+                                    {{ review.reviewer_name }}
+                                </span>
+                                <span style="color: var(--warning); font-weight: 600;">
+                                    {% for r in range(review.rating) %}★{% endfor %}
+                                </span>
+                            </div>
+                            <p style="font-size: 0.875rem; font-style: italic; margin-bottom: 0.25rem;">
+                                "{{ review.comment }}"
+                            </p>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">
+                                Reviewed on {{ review.created_at.strftime('%d-%b-%Y') }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="color: var(--text-muted); font-size: 0.95rem; font-style: italic;">No reviews received yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
