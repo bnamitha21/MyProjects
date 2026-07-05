@@ -1,0 +1,47 @@
+/* NutriScore AI General Styles */
+
+body {
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Custom Card Hover Effects */
+.card {
+  transition:
+    transform 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Rounded Edges */
+.rounded-4 {
+  border-radius: 1rem !important;
+}
+
+/* Spinner Adjustments */
+.spinner-border-sm {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 0.2em;
+}
+
+/* Progress Bar Customization */
+.progress {
+  background-color: #e9ecef;
+  border-radius: 1rem;
+}
+
+.progress-bar {
+  transition: width 0.6s ease;
+  border-radius: 1rem;
+}
+
+/* Landing Page Icons */
+.display-4 {
+  font-size: 3rem;
+  line-height: center;
+}

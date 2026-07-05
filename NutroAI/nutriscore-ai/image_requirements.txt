@@ -1,0 +1,203 @@
+======================================
+NutriScore AI: Image Download Guide
+======================================
+
+You requested specific recommendations to show up on the Recommendations screen, displayed in a 3x5 Grid layout for 4 categories.
+In order for this page to display the images correctly, you need to manually find 15 images on Google or Unsplash and save them inside these exact folders: 
+- `nutriscore-ai/static/images/salads/`
+- `nutriscore-ai/static/images/berries/`
+- `nutriscore-ai/static/images/proteins/`
+- `nutriscore-ai/static/images/water/`
+
+Please find an image matching each "Search Term", and save it EXACTLY as the "Filename" listed below. The ".jpg" extension is mandatory, so make sure they are JPG files!
+
+# Salads Category -> save in `/static/images/salads/`
+
+1. Search Term: "Caesar Salad"
+   Filename to Save: `caesar.jpg`
+
+2. Search Term: "Spinach and Strawberry Salad"
+   Filename to Save: `spinach.jpg`
+
+3. Search Term: "Greek Salad with Feta"
+   Filename to Save: `greek.jpg`
+
+4. Search Term: "Cobb Salad"
+   Filename to Save: `cobb.jpg`
+
+5. Search Term: "Caprese Salad"
+   Filename to Save: `caprese.jpg`
+
+6. Search Term: "Kale Quinoa Salad"
+   Filename to Save: `kale_quinoa.jpg`
+
+7. Search Term: "Waldorf Salad"
+   Filename to Save: `waldorf.jpg`
+
+8. Search Term: "Avocado Corn Salad"
+   Filename to Save: `avocado_corn.jpg`
+
+9. Search Term: "Nicoise Salad"
+   Filename to Save: `nicoise.jpg`
+
+10. Search Term: "Arugula Parmesan Salad"
+    Filename to Save: `arugula.jpg`
+
+11. Search Term: "Broccoli Crunch Salad"
+    Filename to Save: `broccoli.jpg`
+
+12. Search Term: "Southwest Chicken Salad"
+    Filename to Save: `southwest.jpg`
+
+13. Search Term: "Mediterranean Chickpea Salad"
+    Filename to Save: `chickpea.jpg`
+
+14. Search Term: "Asian Sesame Salad"
+    Filename to Save: `sesame.jpg`
+
+15. Search Term: "Roasted Beet and Goat Cheese Salad"
+    Filename to Save: `beet.jpg`
+
+
+# Berries Category -> save in `/static/images/berries/`
+
+1. Search Term: "Blueberries"
+   Filename to Save: `blueberries.jpg`
+
+2. Search Term: "Strawberries"
+   Filename to Save: `strawberries.jpg`
+
+3. Search Term: "Raspberries"
+   Filename to Save: `raspberries.jpg`
+
+4. Search Term: "Blackberries"
+   Filename to Save: `blackberries.jpg`
+
+5. Search Term: "Cranberries"
+   Filename to Save: `cranberries.jpg`
+
+6. Search Term: "Mixed Berry Bowl"
+   Filename to Save: `mixed_bowl.jpg`
+
+7. Search Term: "Goji Berries"
+   Filename to Save: `goji.jpg`
+
+8. Search Term: "Acai Bowl"
+   Filename to Save: `acai.jpg`
+
+9. Search Term: "Mulberries"
+   Filename to Save: `mulberries.jpg`
+
+10. Search Term: "Boysenberries"
+    Filename to Save: `boysenberries.jpg`
+
+11. Search Term: "Elderberries"
+    Filename to Save: `elderberries.jpg`
+
+12. Search Term: "Gooseberries"
+    Filename to Save: `gooseberries.jpg`
+
+13. Search Term: "Cloudberries"
+    Filename to Save: `cloudberries.jpg`
+
+14. Search Term: "Loganberries"
+    Filename to Save: `loganberries.jpg`
+
+15. Search Term: "Marionberries"
+    Filename to Save: `marionberries.jpg`
+
+
+# Proteins Category -> save in `/static/images/proteins/`
+
+1. Search Term: "Grilled Chicken Breast"
+   Filename to Save: `chicken.jpg`
+
+2. Search Term: "Salmon Fillet"
+   Filename to Save: `salmon.jpg`
+
+3. Search Term: "Hard Boiled Eggs"
+   Filename to Save: `eggs.jpg`
+
+4. Search Term: "Greek Yogurt"
+   Filename to Save: `yogurt.jpg`
+
+5. Search Term: "Lentil Soup"
+   Filename to Save: `lentils.jpg`
+
+6. Search Term: "Tofu Scramble"
+   Filename to Save: `tofu.jpg`
+
+7. Search Term: "Edamame"
+   Filename to Save: `edamame.jpg`
+
+8. Search Term: "Cottage Cheese"
+   Filename to Save: `cottage_cheese.jpg`
+
+9. Search Term: "Lean Beef Steak"
+   Filename to Save: `beef.jpg`
+
+10. Search Term: "Turkey Breast"
+    Filename to Save: `turkey.jpg`
+
+11. Search Term: "Chickpea Salad Protein"
+    Filename to Save: `chickpeas.jpg`
+
+12. Search Term: "Quinoa Bowl Protein"
+    Filename to Save: `quinoa.jpg`
+
+13. Search Term: "Black Beans"
+    Filename to Save: `black_beans.jpg`
+
+14. Search Term: "Protein Shake"
+    Filename to Save: `shake.jpg`
+
+15. Search Term: "Almonds"
+    Filename to Save: `almonds.jpg`
+
+
+# Detox Water Category -> save in `/static/images/water/`
+
+1. Search Term: "Lemon Mint Water"
+   Filename to Save: `lemon_mint.jpg`
+
+2. Search Term: "Cucumber Water"
+   Filename to Save: `cucumber.jpg`
+
+3. Search Term: "Strawberry Basil Water"
+   Filename to Save: `strawberry_basil.jpg`
+
+4. Search Term: "Watermelon Mint Water"
+   Filename to Save: `watermelon.jpg`
+
+5. Search Term: "Grapefruit Rosemary Water"
+   Filename to Save: `grapefruit.jpg`
+
+6. Search Term: "Apple Cinnamon Water"
+   Filename to Save: `apple_cinnamon.jpg`
+
+7. Search Term: "Ginger Lemon Water"
+   Filename to Save: `ginger_lemon.jpg`
+
+8. Search Term: "Orange Blueberry Water"
+   Filename to Save: `orange_blueberry.jpg`
+
+9. Search Term: "Pineapple Mint Water"
+   Filename to Save: `pineapple_mint.jpg`
+
+10. Search Term: "Lime Raspberry Water"
+    Filename to Save: `lime_raspberry.jpg`
+
+11. Search Term: "Chia Seed Water"
+    Filename to Save: `chia.jpg`
+
+12. Search Term: "Aloe Vera Water"
+    Filename to Save: `aloe.jpg`
+
+13. Search Term: "Coconut Water"
+    Filename to Save: `coconut.jpg`
+
+14. Search Term: "Green Tea Detox"
+    Filename to Save: `green_tea.jpg`
+
+15. Search Term: "Pomegranate Mint Water"
+    Filename to Save: `pomegranate.jpg`

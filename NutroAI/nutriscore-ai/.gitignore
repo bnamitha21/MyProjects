@@ -1,0 +1,4 @@
+node_modules/
+.env
+nutriscore.db
+out.txt

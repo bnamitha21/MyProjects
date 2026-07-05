@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - NutriScore AI</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+        <div class="container">
+            <span class="navbar-brand fw-bold">🍎 NutriScore AI</span>
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('user_profile') }}" class="d-flex align-items-center text-decoration-none" title="View Profile Stats">
+                    <img id="userAvatar" src="" alt="Profile" class="rounded-circle me-2 d-none" width="32" height="32" style="border: 2px solid white;">
+                    <span class="navbar-text me-3 fw-bold text-white" id="userNameDisplay">User</span>
+                </a>
+                <button id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 mb-5 pb-5">
+        <div class="row">
+            
+            <!-- Health Score Column -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4 h-100">
+                    <h5 class="fw-bold text-muted mb-3">Your Health Score</h5>
+                    <div class="display-1 fw-bold text-success mb-2" id="healthScoreCircle">50</div>
+                    <div class="progress mb-3" style="height: 20px;">
+                        <div id="healthScoreBar" class="progress-bar bg-success" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <p class="text-muted small">Score updates based on your daily food logs. Keep it above 70 for optimal health!</p>
+                </div>
+            </div>
+
+            <!-- Upload Food Label Column -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <span class="bg-primary text-white rounded-circle d-inline-flex justify-content-center align-items-center me-2" style="width: 30px; height: 30px; font-size: 14px;">1</span> 
+                        Food Label Analysis
+                    </h5>
+                    <p class="text-muted small">Upload a picture of the ingredients or nutrition label from a packaged food to see if it's healthy.</p>
+                    
+                    <input type="file" id="labelImage" class="form-control mb-3" accept="image/*">
+                    
+                    <button id="analyzeBtn" class="btn btn-primary mb-3">
+                        <span id="analyzeSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Analyze with AI
+                    </button>
+
+                    <div id="analysisResult" class="alert alert-info d-none">
+                        <h6 class="fw-bold mb-1" id="analysisStatus">Status</h6>
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge bg-secondary me-2">AI Score: <span id="analysisScore">0</span>/100</span>
+                        </div>
+                        <p class="mb-0 small" id="analysisExplanation">Explanation here...</p>
+                        <button id="logAnalyzedFoodBtn" class="btn btn-sm btn-outline-success mt-3 d-none">Log this food</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Food Column -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-3 d-flex align-items-center">
+                        <span class="bg-warning text-white rounded-circle d-inline-flex justify-content-center align-items-center me-2" style="width: 30px; height: 30px; font-size: 14px;">2</span> 
+                        Log Daily Food
+                    </h5>
+                    <form id="logFoodForm">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Food Name</label>
+                            <input type="text" id="logFoodName" class="form-control form-control-sm" required placeholder="e.g., Apple, Pizza, Salad">
+                        </div>
+                        <button type="submit" id="submitLogBtn" class="btn btn-sm btn-warning w-100">
+                            <span id="logSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span>Add to Log (AI Score)</span>
+                        </button>
+                    </form>
+                    <hr>
+                    <h6 class="fw-bold small text-muted mb-2">Recent Logs</h6>
+                    <div id="foodHistoryList" class="list-group list-group-flush" style="max-height: 150px; overflow-y: auto;">
+                        <!-- dynamic items -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommendations Column -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                    <h5 class="fw-bold mb-4">Healthy Recommendations For You</h5>
+                    <div class="row" id="recommendationsContainer">
+                        <!-- Card 1 -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <a href="{{ url_for('recommendations', category='salads') }}" class="text-decoration-none text-dark d-block h-100">
+                                <div class="card h-100 bg-success bg-opacity-10 border-success border-opacity-25 rounded-3">
+                                    <div class="card-body text-center">
+                                        <div class="fs-1 mb-2">🥗</div>
+                                        <h6 class="fw-bold text-success">Leafy Salads</h6>
+                                        <p class="small text-muted mb-0">High in vitamins & fiber.</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <a href="{{ url_for('recommendations', category='berries') }}" class="text-decoration-none text-dark d-block h-100">
+                                <div class="card h-100 bg-info bg-opacity-10 border-info border-opacity-25 rounded-3">
+                                    <div class="card-body text-center">
+                                        <div class="fs-1 mb-2">🫐</div>
+                                        <h6 class="fw-bold text-info">Berries</h6>
+                                        <p class="small text-muted mb-0">Packed with antioxidants and low in calories.</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                        <!-- Card 3 -->
+                        <div class="col-md-6 col-lg-3 mb-3">
+                            <a href="{{ url_for('recommendations', category='proteins') }}" class="text-decoration-none text-dark d-block h-100">
+                                <div class="card h-100 bg-warning bg-opacity-10 border-warning border-opacity-25 rounded-3">
+                                    <div class="card-body text-center">
+                                        <div class="fs-1 mb-2">🥚</div>
+                                        <h6 class="fw-bold text-warning">High Protein</h6>
+                                        <p class="small text-muted mb-0">Eggs or lentil soup to maintain muscle health.</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                         <!-- Card 4 -->
+                         <div class="col-md-6 col-lg-3 mb-3">
+                            <a href="{{ url_for('recommendations', category='water') }}" class="text-decoration-none text-dark d-block h-100">
+                                <div class="card h-100 bg-primary bg-opacity-10 border-primary border-opacity-25 rounded-3">
+                                    <div class="card-body text-center">
+                                        <div class="fs-1 mb-2">💧</div>
+                                        <h6 class="fw-bold text-primary">Detox Water</h6>
+                                        <p class="small text-muted mb-0">Lemon & mint water for hydration and detox.</p>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const userId = localStorage.getItem('userId');
+        if (!userId) {
+            window.location.href = '{{ url_for("login") }}';
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('userId');
+            window.location.href = '{{ url_for("index") }}';
+        });
+
+        // Load Dashboard Data
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`/api/dashboard/${userId}`);
+                if (!res.ok) throw new Error('Failed to load data');
+                const data = await res.json();
+
+                // Update Name
+                if (data.user) {
+                    const firstName = data.user.name.split(' ')[0];
+                    document.getElementById('userNameDisplay').textContent = "Hi, " + firstName;
+                    
+                    // Display Avatar
+                    const avatarImg = document.getElementById('userAvatar');
+                    avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(data.user.name)}&background=ffffff&color=198754&bold=true`;
+                    avatarImg.classList.remove('d-none');
+                }
+
+                // Update Health Score
+                const score = data.healthScore;
+                const scoreCircle = document.getElementById('healthScoreCircle');
+                const scoreBar = document.getElementById('healthScoreBar');
+                
+                scoreCircle.textContent = score;
+                scoreBar.style.width = `${score}%`;
+                scoreBar.setAttribute('aria-valuenow', score);
+
+                if (score > 70) {
+                    scoreCircle.className = "display-1 fw-bold text-success mb-2";
+                    scoreBar.className = "progress-bar bg-success";
+                } else if (score > 40) {
+                    scoreCircle.className = "display-1 fw-bold text-warning mb-2";
+                    scoreBar.className = "progress-bar bg-warning text-dark";
+                } else {
+                    scoreCircle.className = "display-1 fw-bold text-danger mb-2";
+                    scoreBar.className = "progress-bar bg-danger";
+                }
+
+                // Load logs
+                const list = document.getElementById('foodHistoryList');
+                list.innerHTML = '';
+                if (data.logs.length === 0) {
+                    list.innerHTML = '<div class="text-muted small text-center p-2">No food logged yet.</div>';
+                } else {
+                    data.logs.forEach(log => {
+                        const scoreColor = log.score >= 50 ? 'text-success' : 'text-danger';
+                        list.innerHTML += `
+                            <div class="list-group-item px-0 py-2 border-bottom">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <span class="fw-semibold small">${log.food_name}</span>
+                                    <span class="small fw-bold ${scoreColor}">${log.score}/100</span>
+                                </div>
+                                <small class="text-muted" style="font-size: 0.7rem;">${log.date}</small>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Optional: Adjust recommendations based on UserProfile (data.profile)
+                // For a simple prototype, we keep the static cards but we could dynamically inject them tailored to `fitness_goal`.
+
+            } catch (err) {
+                console.error(err);
+                alert("Session expired or server error. Please login again.");
+                localStorage.removeItem('userId');
+                window.location.href = '{{ url_for("login") }}';
+            }
+        }
+
+        // Log Food Form Submission (AI Triggered)
+        document.getElementById('logFoodForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const food_name = document.getElementById('logFoodName').value.trim();
+            if (!food_name) return;
+
+            const submitBtn = document.getElementById('submitLogBtn');
+            const spinner = document.getElementById('logSpinner');
+            const btnText = submitBtn.querySelector('span:not(.spinner-border)');
+
+            // Loading state
+            submitBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            btnText.textContent = ' AI Calculating...';
+
+            try {
+                const res = await fetch(`/api/logs/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_name })
+                });
+
+                if (res.ok) {
+                    document.getElementById('logFoodName').value = '';
+                    loadDashboard(); // reload UI with new logged food and updated health score
+                } else {
+                    const err = await res.json();
+                    alert(err.error || "Failed to log food.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Cannot connect to server.");
+            } finally {
+                submitBtn.disabled = false;
+                spinner.classList.add('d-none');
+                btnText.textContent = ' Add to Log (AI Score)';
+            }
+        });
+
+        // Analyze Food Label with Gemini API
+        let lastAnalyzedScore = 0;
+        let lastAnalyzedFood = '';
+
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('labelImage');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                return alert("Please select an image file first.");
+            }
+
+            const file = fileInput.files[0];
+            
+            // Create FormData to send the file securely
+            const formData = new FormData();
+            formData.append('image', file);
+
+            const btn = document.getElementById('analyzeBtn');
+            const spinner = document.getElementById('analyzeSpinner');
+            const resultDiv = document.getElementById('analysisResult');
+            const logBtn = document.getElementById('logAnalyzedFoodBtn');
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            resultDiv.classList.add('d-none');
+            logBtn.classList.add('d-none');
+
+            try {
+                // Notice we do NOT set Content-Type; the browser sets it to multipart/form-data 
+                // automatically with the correct boundary when passing FormData.
+                const res = await fetch('/api/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || "Analysis failed");
+                }
+
+                const data = await res.json();
+                
+                // Update UI
+                resultDiv.classList.remove('d-none');
+                
+                document.getElementById('analysisStatus').textContent = data.status;
+                document.getElementById('analysisScore').textContent = data.score;
+                document.getElementById('analysisExplanation').textContent = data.explanation;
+
+                // Configure colors based on score
+                resultDiv.className = 'alert mt-3 ';
+                if (data.score > 70) {
+                    resultDiv.classList.add('alert-success');
+                } else if (data.score > 40) {
+                    resultDiv.classList.add('alert-warning');
+                } else {
+                    resultDiv.classList.add('alert-danger');
+                }
+
+                // prepare log properties
+                lastAnalyzedScore = data.score;
+                lastAnalyzedFood = "Analyzed Label Food";
+                logBtn.classList.remove('d-none');
+
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            }
+        });
+
+        // Quick log of analyzed food
+        document.getElementById('logAnalyzedFoodBtn').addEventListener('click', async () => {
+             try {
+                const res = await fetch(`/api/logs/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_name: lastAnalyzedFood, score: lastAnalyzedScore })
+                });
+                if (res.ok) {
+                    alert('Label logged successfully!');
+                    loadDashboard();
+                    document.getElementById('logAnalyzedFoodBtn').classList.add('d-none');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // Initial Load
+        loadDashboard();
+    </script>
+</body>
+</html>

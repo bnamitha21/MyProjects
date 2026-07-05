@@ -1,0 +1,43 @@
+=====================================
+# NutriScore AI: Architecture Guide
+=====================================
+
+## Folder Structure
+This application follows the standard Python Flask web architecture. 
+
+1. `templates/` 
+   - Contains all the HTML files (the structure of the webpages). 
+   - Flask uses the `render_template` function to display these pages to the user.
+   - Example files: `index.html` (Landing page), `login.html` (Login page).
+
+2. `static/`
+   - Contains all the CSS styles, JavaScript logic, and images.
+   - These files are public-facing but do not contain dynamic database rendering like the HTML templates.
+   - We use Jinja2 URL templates (`url_for('static', filename='css/style.css')`) inside HTML files to load these correctly.
+
+## Core Files
+
+### `app.py`
+This is your main backend server logic built in Python (Flask).
+- It opens the initial database SQLite connection using `sqlite3`.
+- It defines "Page Routes" (e.g., `@app.route('/login')`) to display pages from the `templates` folder.
+- It defines "API Routes" (e.g., `@app.route('/api/analyze', methods=['POST'])`) which handle data processing (like sending text to the Google Gemini AI integration and storing user signups).
+
+### `nutriscore.db`
+This is the SQLite database file containing all your tables (`Users`, `UserProfile`, `FoodLogs`) storing user data and health metrics locally.
+
+## Important JavaScript Functions
+
+Behind the scenes, the HTML files use `<script>` tags to make the app interactive before it talks to `app.py`. A quick overview of what these scripts do:
+
+- `static/js/main.js -> checkAuthRedirect()`: 
+   This function automatically runs any time you visit a login or signup page. If it detects you are ALREADY logged in (via `localStorage`), it instantly forces your browser to redirect to the `/dashboard` instead of letting you sign in again.
+   
+- `login.html -> loginForm.addEventListener('submit', ...)`:
+   Takes your typed email/password, prevents the page from refreshing automatically, and secretly posts data to `app.py` at `/api/login`. If the password matches the DB, it saves a generic `userId` locally to keep you "logged in".
+
+- `profile.html -> profileForm.addEventListener('submit', ...)`:
+   Collects all 12 answers (age, sugar level, fitness goal, etc.) in a JSON object and posts them to `app.py` to be saved in the `UserProfile` database for long-term tracking.
+
+- `dashboard.html -> analyzeBtn.addEventListener('click', ...)`:
+   This grabs the copy-pasted text from your textarea input. It shows a spinning loading icon, posts the text to `/api/analyze`, waits for the `gemini-1.5-flash` language model running in Python to respond, and dynamically places the returning health score out of 100 onto your screen with color-coded CSS without refreshing.

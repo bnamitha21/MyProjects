@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - NutriScore AI Recommendations</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .food-img-wrapper {
+            width: 100%;
+            height: 200px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa; /* Light gray background for images that don't fill */
+        }
+        
+        .food-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .score-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-decoration-none" href="{{ url_for('index') }}">🍎 NutriScore AI</a>
+            <div class="d-flex align-items-center">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-light btn-sm me-3">Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5 pb-5">
+        <div class="row mb-4 align-items-center">
+            <div class="col-8">
+                <h2 class="fw-bold mb-1">{{ title }} Options</h2>
+                <p class="text-muted">Explore these top 15 recommended {{ title|lower }} to boost your daily health score.</p>
+            </div>
+        </div>
+
+        <!-- 3x5 Grid -->
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            
+            {% for item in items %}
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm rounded-4 position-relative overflow-hidden">
+                    
+                    <!-- Health Score absolute badge -->
+                    <span class="badge bg-success shadow-sm score-badge rounded-pill px-3 py-2">
+                        ⭐ {{ item.score }} Score
+                    </span>
+                    
+                    <div class="food-img-wrapper">
+                        <!-- We try to load the local user-downloaded image. If it fails (user hasn't saved it yet), fallback to a generic network placeholder colored appropriately -->
+                        <img src="{{ url_for('static', filename='images/' + category_id + '/' + item.image) }}" 
+                             alt="{{ item.name }}" 
+                             class="food-img"
+                             onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=Missing+Image&background=e9ecef&color=6c757d&size=400';">
+                    </div>
+                    
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-0 text-success">{{ item.name }}</h5>
+                        <p class="text-muted small mt-2 mb-0">Filename required: <code>{{ item.image }}</code></p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
