@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; width: 100%;">
+
+    <!-- ── Hero Section ── -->
+    <div
+        style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border-glass); padding-bottom: 1.5rem;">
+        <div>
+            <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem; font-weight: 700;">
+                <span style="color: var(--text-muted); font-weight: 400;">Welcome back,</span>
+                <span class="text-gradient">{{ current_user.name.split()[0] }}</span>
+            </h1>
+            <p style="color: var(--text-muted); margin: 0; font-size: 1.05rem;">Here's what's happening with your
+                hackathon teams.</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('discover.teams') }}" class="btn btn-secondary">🔍 Find Teams</a>
+            <a href="{{ url_for('teams.create_team') }}" class="btn btn-primary">🚀 Create Team</a>
+        </div>
+    </div>
+
+    <!-- ── Quick Stats ── -->
+    <div
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem;">
+        <div class="card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; margin-bottom: 0;">
+            <div
+                style="width: 50px; height: 50px; border-radius: 12px; background: rgba(124, 58, 237, 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                🏆
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; line-height: 1;">{{ my_teams | length }}</h3>
+                <p
+                    style="margin: 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Active Teams</p>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; margin-bottom: 0;">
+            <div
+                style="width: 50px; height: 50px; border-radius: 12px; background: rgba(245, 158, 11, 0.15); color: var(--warning); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                🔔
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; line-height: 1;">{{
+                    pending_invitations|length + sent_requests|length }}</h3>
+                <p
+                    style="margin: 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Pending Actions</p>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 1.5rem; display: flex; align-items: center; gap: 1.2rem; margin-bottom: 0;">
+            <div
+                style="width: 50px; height: 50px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); color: var(--success); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                👥
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 1.8rem; font-weight: 700; line-height: 1;">{{ suggested_teammates |
+                    length }}</h3>
+                <p
+                    style="margin: 0; color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Matches Found</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Main Grid ── -->
+    <div style="display: grid; grid-template-columns: 2fr 1.2fr; gap: 2rem;">
+
+        <!-- ── Left Column: Teams & Activity ── -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+            <!-- My Teams -->
+            <div>
+                <h2 style="font-size: 1.4rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="color: var(--primary);">⚡</span> My Teams
+                </h2>
+
+                {% if my_teams %}
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for team in my_teams %}
+                    <div class="card"
+                        style="padding: 1.5rem; margin-bottom: 0; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 1.5rem; transition: transform 0.2s; border-left: 4px solid var(--primary);">
+
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.8rem;">
+                                <h3 style="margin: 0; font-size: 1.25rem;">{{ team.name }}</h3>
+                                <span
+                                    class="badge {% if team.status == 'recruiting' %}badge-avail-available{% elif team.status == 'full' %}badge-avail-tentative{% else %}badge-primary{% endif %}"
+                                    style="font-size: 0.7rem; padding: 0.2rem 0.6rem;">
+                                    {{ team.status }}
+                                </span>
+                            </div>
+
+                            <div
+                                style="display: flex; align-items: center; gap: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">
+                                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        style="opacity: 0.7;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    {{ team.hackathon_name }}
+                                </span>
+
+                                {% if team.start_date %}
+                                <span style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                        style="opacity: 0.7;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    {{ team.start_date.strftime('%d %b') }} - {{ team.end_date.strftime('%d %b %Y') }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.8rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Role: <strong
+                                    style="color: var(--text-light);">{{ team.role }}</strong></span>
+                            <div style="display: flex; gap: 0.5rem;">
+                                {% if team.status == 'completed' %}
+                                <a href="{{ url_for('feedback.rate_teammates', team_id=team.id) }}"
+                                    class="btn btn-success btn-sm">★ Rate</a>
+                                {% endif %}
+                                <a href="{{ url_for('teams.view_workspace', team_id=team.id) }}"
+                                    class="btn btn-primary btn-sm">Workspace →</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="card"
+                    style="padding: 3rem 2rem; text-align: center; border-style: dashed; background: transparent;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.8;">🚀</div>
+                    <h3 style="margin-bottom: 0.5rem;">No active teams</h3>
+                    <p
+                        style="color: var(--text-muted); font-size: 0.95rem; max-width: 400px; margin: 0 auto 1.5rem auto;">
+                        You haven't joined any hackathon teams yet. Create a new team or browse recruiting teams to get
+                        started.</p>
+                    <a href="{{ url_for('teams.create_team') }}" class="btn btn-primary">Create Your First Team</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Required (Alerts) -->
+            {% if pending_invitations or sent_requests %}
+            <div>
+                <h2
+                    style="font-size: 1.4rem; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 0.5rem; color: var(--warning);">
+                    <span>⚠️</span> Action Required
+                </h2>
+
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for invite in pending_invitations %}
+                    <div class="card"
+                        style="padding: 1rem 1.5rem; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--warning);">
+                        <div>
+                            <p style="margin: 0; font-size: 1rem;"><strong>{{ invite.sender_name }}</strong> invited you
+                                to join <strong>{{ invite.team_name }}</strong></p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ url_for('invitations.accept_invitation', invite_id=invite.id) }}"
+                                class="btn btn-primary btn-sm">Accept</a>
+                            <a href="{{ url_for('invitations.reject_invitation', invite_id=invite.id) }}"
+                                class="btn btn-secondary btn-sm">Decline</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for req in sent_requests %}
+                    <div class="card"
+                        style="padding: 1rem 1.5rem; margin-bottom: 0; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid var(--text-muted);">
+                        <div>
+                            <p style="margin: 0; font-size: 1rem;">You requested to join <strong>{{ req.team_name
+                                    }}</strong></p>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                Status: <span style="color: var(--warning);">{{ req.status }}</span></p>
+                        </div>
+                        <form action="{{ url_for('invitations.cancel_invitation', invite_id=req.id) }}" method="POST"
+                            style="margin: 0;">
+                            <input type="hidden" name="redirect_url" value="{{ request.path }}">
+                            <button type="submit" class="btn btn-secondary btn-sm"
+                                data-confirm="Withdraw request?">Withdraw</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- ── Right Column: Discover & Suggestions ── -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+
+            <!-- Suggested Teammates -->
+            <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+                    <h2 style="font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--primary);">👥</span> Suggested Teammates
+                    </h2>
+                    <a href="{{ url_for('discover.students') }}"
+                        style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 500;">View
+                        All →</a>
+                </div>
+
+                {% if suggested_teammates %}
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for student in suggested_teammates[:4] %}
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            {% if student.photo and student.photo != 'default_avatar.png' %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ student.photo) }}"
+                                alt="{{ student.name }}"
+                                style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                            <div
+                                style="width: 40px; height: 40px; background: var(--accent-gradient); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;">
+                                {{ student.name[0] | upper }}
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h4 style="margin: 0; font-size: 0.95rem;">{{ student.name }}</h4>
+                                <p style="margin: 0; font-size: 0.8rem; color: var(--text-muted);">{{ student.role }}
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('profile.view_profile', user_id=student.id) }}"
+                            class="btn btn-secondary btn-sm"
+                            style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Profile</a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                    No teammate suggestions currently available.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Recruiting Teams -->
+            <div class="card" style="padding: 1.5rem; margin-bottom: 0;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem;">
+                    <h2 style="font-size: 1.2rem; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <span style="color: var(--primary);">🔍</span> Teams Recruiting
+                    </h2>
+                    <a href="{{ url_for('discover.teams') }}"
+                        style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 500;">View
+                        All →</a>
+                </div>
+
+                {% if recruiting_teams %}
+                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                    {% for r_team in recruiting_teams[:4] %}
+                    <div
+                        style="padding: 1rem; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <h4 style="margin: 0 0 0.3rem 0; font-size: 1rem;">{{ r_team.name }}</h4>
+                        <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: var(--primary);">{{
+                            r_team.hackathon_name }}</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            {% if r_team.start_date %}
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">{{
+                                r_team.start_date.strftime('%b %d') }}</span>
+                            {% else %}
+                            <span></span>
+                            {% endif %}
+                            <a href="{{ url_for('teams.view_workspace', team_id=r_team.id) }}"
+                                class="btn btn-secondary btn-sm"
+                                style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">Details</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 1.5rem 0; color: var(--text-muted); font-size: 0.9rem;">
+                    No active recruiting teams found.
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
